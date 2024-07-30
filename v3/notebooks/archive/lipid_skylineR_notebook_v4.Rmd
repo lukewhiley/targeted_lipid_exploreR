@@ -1,0 +1,218 @@
+---
+title: "ANPC SkylineR v3"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+<!-- This notebook is designed for use with the ANPC targeted lipid method. 
+Section 1: SkylineR is designed to optimise lipidomics data processing in combination with skyline.
+
+
+Section 1 - SkylineR
+
+This notebook is designed to optimise lipidomics data processing in combination with skyline.
+
+It will perform:
+- retention time optimisation by identifying peaks in LTR or QC samples
+- standardised peak boundary fitting to all samples
+
+REQUIREMENTS:
+- A subfolder containig mzML files created by proteowizard msconvert version 3.0.19. Later versions of MS convert can cause problems with msnbase in r
+
+- mzML files from LTR samples must have "LTR" in their filename
+
+Skyline export files must contain:
+- A csv template containing the target transition details. ONLY the following column headers should be present: 
+      - "Molecule List" (lipid family (e.g. CE))
+      - "Precursor Name" (lipid name (e.g. CE(14:0)))
+      - "Precursor Mz" (e.g. 614.6)
+      - "Precursor Charge" (set as 1)
+      - "Product Mz" (e.g. 369.4)
+      - "Product Charge" (set as 1)
+      - "Explicit Retention Time" (e.g. 11.66)
+      - "Explicit Retention Time Window" (leave at 0.5)
+      - "Note" in the column "Note" insert the SIL IS to be used for the target lipid. For the rows containing SIL IS themselves leave the note column blank.
+      
+      -->
+
+
+<!-- ALL USER INPUT IN THIS CHUNK -->
+
+```{r set up project structure, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+#set up project master list
+master_list <- list()
+master_list$project_details <- list()
+master_list$functions <- list()
+master_list$mrm_data <- list()
+master_list$summary_tables <- list()
+
+##USER INPUT##
+#set project details
+#set user
+master_list$project_details$user_name <- "LGW"
+#set project name
+master_list$project_details$project_name <- "lipid skylineR v3 test"
+#set project directory
+master_list$project_details$project_dir <- "/Users/lukegraywhiley/Library/CloudStorage/OneDrive-MurdochUniversity/projects/2022-STANLEY-DELIRISK/data/lipidomics_data"
+
+#source LGW github functions
+master_list$project_details$github_master_dir <- "https://raw.githubusercontent.com/lukewhiley/metabolomics_code/main/functions"
+
+
+#clean environment
+rm(list = c(ls()[which(ls() != "master_list")]))
+```
+
+
+```{r set up project and load packages, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+#### load packages
+package_list <- c('plyr', 'tidyverse', 'janitor', 'shiny', 'plotly', 'effsize', 'dunn.test', 'RColorBrewer', 'statTarget', 'metabom8', 'rstatix', 'ggpubr', 'cowplot', 'knitr', 'stats', 'viridisLite', 'ggbeeswarm', 'q3ML', 'xcms', 'sRm', 'MSCoreUtils')
+
+for(idx_package in package_list){
+  if(length(which(row.names(installed.packages()) == idx_package)) > 0){
+  suppressMessages(require(package = idx_package,
+                                         character.only = TRUE))
+  } else {
+    paste0(idx_package, " is not installed. Please install ", idx_package, " before continuing.") %>% print()
+  }
+}
+
+#read in mrm_guide from github
+master_list$mrm_data$mrm_guide <- read_csv(
+  "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR_v3/main/templates/LGW_lipid_mrm_template.csv")
+
+
+#source functions
+master_list$functions$mrm_findeR_pwiz3019 <- source(paste0(master_list$project_details$github_master_dir , "/2022_LGW_FUNC_MRM_findeR_pwiz3019_mzR.R"))
+
+#clean environment
+rm(list = c(ls()[which(ls() != "master_list")]))
+
+```
+
+
+```{r mrm_findeR_pwiz3019, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+#master_list$mrm_data$mrm_guide_rt_update <- master_list$functions$mrm_findeR$value(
+master_list$mrm_data$mrm_guide_rt_update <- master_list$functions$mrm_findeR_pwiz3019$value(
+  FUNC_mzml_data_path = paste0(master_list$project_details$project_dir, "/data/mzml_pwiz3019"),
+  FUNC_mrm_guide = master_list$mrm_data$mrm_guide %>% 
+           clean_names,
+  FUNC_OPTION_qc_type = "LTR",
+  FUNC_OPTION_max_qc_replicates = 8)
+# 
+if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/skyline_updates"))){
+  dir.create(paste0(master_list$project_details$project_dir, "/data/skyline_updates"))
+}
+
+write_csv(x = master_list$mrm_data$mrm_guide_rt_update,
+          file = paste0(master_list$project_details$project_dir, "/data/skyline_updates/mrm_rt_updated.csv"))
+
+```
+
+```{r peak boundary, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+
+#master_list$mrm_data$mrm_guide_rt_update <- master_list$functions$mrm_findeR$value(
+master_list$mrm_data$mrm_guide_pb_update <- peak_boundary_findR(
+  FUNC_data = paste0(master_list$project_details$project_dir, "/data/skyline_exports/2022-06-27_delirisk_xSkylineR.csv"),
+  FUNC_OPTION_qc_type = "LTR"
+)
+# 
+if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/skyline_updates"))){
+  dir.create(paste0(master_list$project_details$project_dir, "/data/skyline_updates"))
+}
+
+write_csv(x = master_list$mrm_data$mrm_guide_rt_update,
+          file = paste0(master_list$project_details$project_dir, "/data/skyline_updates/mrm_peak_boundary_updated.csv"))
+
+```
+
+<!-- peak picking in r
+
+Process: load data into r
+
+-->
+
+
+```{r load data into r, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+# create a list of mzML files 
+#chrom_files <- list.files(paste0(master_list$project_details$project_dir, "/data/mzml_pwiz3019"), full.names = TRUE)[1:5]
+
+chrom_files <- list.files("/Users/lukegraywhiley/Library/CloudStorage/OneDrive-MurdochUniversity/projects/2022-GRAY-LIPID_METHOD/data/lipidomics_data/mzML_no_compress",  full.names = TRUE)
+
+srmExp_sciex <- sRm::openSRM(chrom_files, source_type = 'raw', backend = 'mzR')
+
+```
+
+
+<!-- peak picking in r
+
+Process: plot data
+
+-->
+
+```{r plot data, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+
+plotSRM(srmExp_sciex, index = 312, type = 'overlay')
+
+plotSRM(srmExp_sciex, index = 312, type = 'facet')
+
+plotParent(srmExp_sciex, 875.6)
+```
+
+
+<!-- peak picking in r
+Process: pick peaks
+-->
+
+```{r pick peaks, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+#pick peaks
+srmExpPeaks_sciex <-
+  detectPeaks(srmExp_sciex,
+              snthresh = 1,
+              peakwidth = c(2,15), 
+              parallel = TRUE)
+
+#plot peak area
+plotPeakArea(srmExpPeaks_sciex, index = 312, sampleName = "covvac_C1_PLA_MS-LIPIDS_PLIP01_VAXp01_120921-LTR-PLA_27")
+
+```
+
+<!-- peak picking in r
+Process: group peaks
+-->
+
+```{r group peaks, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+#pick peaks
+srmExpGroups_sciex <- groupPeaks(srmExpPeaks_sciex, rt_tolerance = 0.2)
+
+group_table_sciex <- groupSummary(srmExpGroups_sciex); head(group_table_sciex)
+
+number_of_samples <- nrow(srmExp_sciex@meta)
+
+# Only keep groups with have Rt width of 3.0 minutes or less and total group occupancy is less than or equal to the total number of samples. 
+
+group_table_filtered <-
+  group_table_sciex %>% dplyr::filter(Rt >= 1.0 & Rt <= 16.0) %>%
+  dplyr::filter(Rtwidth <= 3) %>% dplyr::filter(count <= number_of_samples)
+
+plotGroup(srmExpGroups_sciex, group = 'G0314')
+
+srmExpGroupTarg_sciex <- createGroup(srmExpPeaks_sciex, index = 312, rt = 10.9,  width = 10, id = 'Group01')
+
+srmExpGroupTarg_sciex@groups
+
+patchwork::wrap_plots(
+  plotSRM(srmExpGroupTarg_sciex, index = 1),
+  plotGroup(srmExpGroupTarg_sciex, group = 'Group01'),
+  ncol = 1
+)
+
+```
+
+
+
