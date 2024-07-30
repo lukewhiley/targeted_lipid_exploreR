@@ -557,7 +557,8 @@ master_list$data$peakArea$statTargetProcessed <- list()
 #loop to back into plate elements of list
 for(idx_batch in unique(FUNC_list$corrected_data$data_qc_mean_adjusted$sample_plate_id)){
   master_list$data$peakArea$statTargetProcessed[[idx_batch]] <- FUNC_list$corrected_data$data_qc_mean_adjusted %>%
-    filter(sample_plate_id == idx_batch)
+    filter(sample_plate_id == idx_batch) %>%
+    mutate(across(where(is.numeric), round, 0))
   #set dataSource
   master_list$data$peakArea$statTargetProcessed[[idx_batch]]$sample_data_source <- "peakArea.statTarget"
 }
@@ -583,8 +584,10 @@ for (idx_dataType in c("sorted", "imputed", "statTargetProcessed")){
   
   #for loop for each data plate
   for(idx_batch in names(master_list$data$peakArea[[idx_dataType]])){
-    #set empty list to store output data
+    #set empty list to store output data for response
     master_list$data$response[[idx_dataType]][[idx_batch]] <- master_list$data$peakArea[[idx_dataType]][[idx_batch]] %>% select(contains("sample"))
+    #set empty list to store output data for concentration
+    master_list$data$concentration[[idx_dataType]][[idx_batch]] <- master_list$data$peakArea[[idx_dataType]][[idx_batch]] %>% select(contains("sample"))
     #run loop for each SIL IS.
     for(idx_SIL in master_list$data$peakArea[[idx_dataType]][[idx_batch]] %>% 
         select(contains("SIL")) %>% 
@@ -597,9 +600,18 @@ for (idx_dataType in c("sorted", "imputed", "statTargetProcessed")){
           column_to_rownames("sample_name")
         if(ncol(target_lipids)>0){
           #calculate response ratio
+          target_lipids_response <- as.matrix(target_lipids/master_list$data$peakArea[[idx_dataType]][[idx_batch]][[idx_SIL]])
+          #standardise data set to remove infinates and NAs
+          target_lipids_response[is.na(target_lipids_response)] <- 0
+          target_lipids_response[is.infinite(target_lipids_response)] <- 0
+          #round and improve decimal places (2dp for >1; 3 sf for < 1)
+          target_lipids_response[target_lipids_response <1] <- signif(target_lipids_response[target_lipids_response <1], 2)
+          target_lipids_response[target_lipids_response >1] <- round(target_lipids_response[target_lipids_response >1], 2)
+          #rejoin and make master
           master_list$data$response[[idx_dataType]][[idx_batch]] <- left_join(by = "sample_name",
             master_list$data$response[[idx_dataType]][[idx_batch]], 
-            rownames_to_column(target_lipids/master_list$data$peakArea[[idx_dataType]][[idx_batch]][[idx_SIL]], "sample_name") %>% as_tibble()
+            as.data.frame(target_lipids_response) %>% 
+              rownames_to_column("sample_name")
           )
         } #if ncol()
         
@@ -608,23 +620,33 @@ for (idx_dataType in c("sorted", "imputed", "statTargetProcessed")){
         sil_conc_factor <- master_list$templates$conc_guide$concentration_factor[which(master_list$templates$conc_guide$sil_name == idx_SIL)]
         if(length(sil_conc_factor) == 1){
           #select response data
-          target_lipids_conc <- select(master_list$data$area_response[[idx_batch]], any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
-          #apply concentration factor to lipd values
-          master_list$data$area_concentration[[idx_batch]] <- bind_cols(
-            master_list$data$area_concentration[[idx_batch]],
-            as_tibble(target_lipids_conc*sil_conc_factor)
-          )
+          target_lipids <- master_list$data$response[[idx_dataType]][[idx_batch]] %>%
+            select(sample_name,
+                   any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) %>%
+            column_to_rownames("sample_name")
+          #calculate concentration
+          target_lipids_concentration <- as.matrix(target_lipids*sil_conc_factor)
+          #standardise data set to remove infinates and NAs
+          target_lipids_concentration[is.na(target_lipids_concentration)] <- 0
+          target_lipids_concentration[is.infinite(target_lipids_concentration)] <- 0
+          #round and improve decimal places (2dp for >1; 3 sf for < 1)
+          target_lipids_concentration[target_lipids_concentration <1] <- signif(target_lipids_concentration[target_lipids_concentration <1], 2)
+          target_lipids_concentration[target_lipids_concentration >1] <- round(target_lipids_concentration[target_lipids_concentration >1], 2)
+          #rejoin and make master
+          master_list$data$concentration[[idx_dataType]][[idx_batch]] <- left_join(by = "sample_name",
+                                                                                   master_list$data$concentration[[idx_dataType]][[idx_batch]], 
+                                                                                   as.data.frame(target_lipids_concentration) %>% 
+                                                                                     rownames_to_column("sample_name")
+                                                                                   )
         } #close if(length(sil_conc_factor) == 1)
-        
       } #if length()
     } #idx_sil
     master_list$data$response[[idx_dataType]][[idx_batch]]$sample_data_source <- paste0(".response.", idx_dataType)
+    master_list$data$concentration[[idx_dataType]][[idx_batch]]$sample_data_source <- paste0("concentration.", idx_dataType)
   } #idx_batch
 } #idx_dataType
-        
-  
-        
-        #.-----------
+
+#.-----------
 
 
 
