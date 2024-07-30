@@ -601,8 +601,22 @@ for (idx_dataType in c("sorted", "imputed", "statTargetProcessed")){
             master_list$data$response[[idx_dataType]][[idx_batch]], 
             rownames_to_column(target_lipids/master_list$data$peakArea[[idx_dataType]][[idx_batch]][[idx_SIL]], "sample_name") %>% as_tibble()
           )
-        } #if length()
-      } #if ncol()
+        } #if ncol()
+        
+        # 2. convert response to single point concentration factor ---------
+        #Find the concentration factor of SIL
+        sil_conc_factor <- master_list$templates$conc_guide$concentration_factor[which(master_list$templates$conc_guide$sil_name == idx_SIL)]
+        if(length(sil_conc_factor) == 1){
+          #select response data
+          target_lipids_conc <- select(master_list$data$area_response[[idx_batch]], any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
+          #apply concentration factor to lipd values
+          master_list$data$area_concentration[[idx_batch]] <- bind_cols(
+            master_list$data$area_concentration[[idx_batch]],
+            as_tibble(target_lipids_conc*sil_conc_factor)
+          )
+        } #close if(length(sil_conc_factor) == 1)
+        
+      } #if length()
     } #idx_sil
     master_list$data$response[[idx_dataType]][[idx_batch]]$sample_data_source <- paste0(".response.", idx_dataType)
   } #idx_batch
