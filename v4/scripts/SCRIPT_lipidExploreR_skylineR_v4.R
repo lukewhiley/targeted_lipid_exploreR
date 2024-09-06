@@ -30,7 +30,7 @@ master_list$summary_tables$project_summary <- tibble(unlist(master_list$project_
 master_list$summary_tables$project_summary <- setNames(master_list$summary_tables$project_summary, c("Project detail", "value"))
 
 #github master directory
-master_list$project_details$github_master_dir <- "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR_v3/main"
+master_list$project_details$github_master_dir <- "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR/main/v4"
 
 #setup project directories
 #data
@@ -67,7 +67,7 @@ if(master_list$project_details$is_ver == "v2"){
 #RT finder
 master_list$environment$user_functions$mrm_RT_findeR_mzR <- source(paste0(
   master_list$project_details$github_master_dir , 
-  "/functions/FUNC_lipidExploreR_MRM_findeR_pwiz3019_mzR_v3.23.R"))
+  "/functions/FUNC_lipidExploreR_MRM_findeR_pwiz3019_mzR_v4.R"))
 
 dlg_message("convert SCIEX files to mzML", type = 'ok'); dlg_message(paste0("mzML directory: [", paste0(master_list$project_details$project_dir, "/data/mzml"), "]"), type = 'ok'); dlg_message("put mzML files in sub folders per plate [/data/mzml/plate_1; /data/mzml/plate_2] etc")
 

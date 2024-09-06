@@ -1572,10 +1572,10 @@ openxlsx::write.xlsx(
 ## 5.2. html report -------------------------
 
 ### 5.2.a. download template ----
-# fileConn<-file(paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_templatev3.3.R"))
-# writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "/templates/TEMPLATE_lipidExploreR_report_v3.3.R")) %>%
-#              httr::content(as = "text"), fileConn)
-# close(fileConn)
+fileConn<-file(paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_templatev4.R"))
+writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "/templates/TEMPLATE_lipidExploreR_report_v3.3.R")) %>%
+             httr::content(as = "text"), fileConn)
+close(fileConn)
 
 
 ### 2. render template ----
