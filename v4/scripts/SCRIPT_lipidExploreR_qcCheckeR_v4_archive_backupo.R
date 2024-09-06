@@ -1501,8 +1501,8 @@ for(idx_metabolite in filter(master_list$templates$SIL_guide, control_chart == T
 
 # . ------------------------------------------------------------------------------------------------------------------------------  
 #PHASE 5: EXPORTS ------------------------------------
-## 5.1. xlsx file -------------------------------
-### 5.1.a. create peakArea user guide ----
+## XLSX FILE -------------------------------
+### 1. create peakArea user guide ----
 master_list$summary_tables$odsAreaOverview <- rbind(
   c("projectName", master_list$project_details$project_name),
   c("user", master_list$project_details$user_name),
@@ -1532,7 +1532,7 @@ master_list$summary_tables$odsAreaOverview <- rbind(
 ) %>%
   as_tibble() 
 
-### 5.1.b. write .xlsx tabbed file ----
+### 2. write .xlsx tabbed file ----
 openxlsx::write.xlsx(
   file = paste0(master_list$project_details$project_dir, 
                 "/xlsx_report/",
@@ -1569,9 +1569,11 @@ openxlsx::write.xlsx(
   )
 )
 
-## 5.2. html report -------------------------
+# . ------------------------------------------------------------------------------------------------------------------------------  
 
-### 5.2.a. download template ----
+## HTML EXPORT -------------------------
+
+### 1. download template ----
 # fileConn<-file(paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_templatev3.3.R"))
 # writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "/templates/TEMPLATE_lipidExploreR_report_v3.3.R")) %>%
 #              httr::content(as = "text"), fileConn)
@@ -1591,17 +1593,719 @@ browseURL(url = paste0(master_list$project_details$project_dir,
                        Sys.Date(), "_", master_list$project_details$project_name, "_LGW_lipidExploreR_qcCheckeR_report_v4.html")
 )
 
-## 5.3. rda file of maser list -------
+
+# . ------------------------------------------------------------------------------------------------------------------------------  
+
+## RDA EXPORT -------
 
 #clean environment
 rm(list = c(ls()[which(ls() != "master_list")]))
-### 5.3.a. export rda of master_list ----
+### 1. export rda of master_list ----
 
 save(master_list,
      file = paste0(
        master_list$project_details$project_dir,
        "/data/rda/", Sys.Date(), 
-       "_LGW_qcCheckeR_v4_", 
+       "_LGW_qcCheckeR_v3.5_", 
        master_list$project_details$project_name, 
        ".rda"))
+
+#. ----
+# ARCHIVE BELOW THIS LINE ----------
+master_list$process_lists$mvLipids <- tibble(
+  lipid = master_list$data$pp_mvFilter_s  %>%
+    bind_rows() %>%
+    select(-contains("sample")) %>%
+    names()
+)
+
+for(idx_batch in names(master_list$data$pp_mvFilter_s)){
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".peakArea<5000[LOD]")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) <5000, na.rm = T)
+  
+  #na values
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".naValues")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) %>%
+      is.na(), na.rm = T)
+  
+  #nan values
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".nanValues")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) %>%
+      is.nan(), na.rm = T)
+  
+  #inf values
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".infValues")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) %>%
+      is.infinite(), na.rm = T)
+  
+  #total missing values for plate
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".totalMissingValues")]] <-  rowSums(x= (master_list$process_lists$mvLipids %>%
+                                                                                                  select(contains(idx_batch))%>%
+                                                                                                  as.matrix()),
+                                                                                            na.rm = T)
+  
+  #does lipid fail for the plate?
+  master_list$process_lists$mvLipids[[paste0(idx_batch, ".keepLipid[Plate]")]] <- 1
+  master_list$process_lists$mvLipids[[paste0(idx_batch, ".keepLipid[Plate]")]][which(
+    master_list$process_lists$mvLipids[[paste0(idx_batch,".totalMissingValues")]] > (nrow(master_list$data$pp_mvFilter_s[[idx_batch]]) * 0.5)
+  )] <- 0
+  
+}
+
+#for all plates
+master_list$process_lists$mvLipids[[paste0("allPlates.peakArea<5000[LOD]")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) <5000, na.rm = T)
+
+#na values
+master_list$process_lists$mvLipids[[paste0("allPlates.naValues")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) %>%
+    is.na(), na.rm = T)
+
+#nan values
+master_list$process_lists$mvLipids[[paste0("allPlates.nanValues")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) %>%
+    is.nan(), na.rm = T)
+
+#inf values
+master_list$process_lists$mvLipids[[paste0("allPlates.infValues")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) %>%
+    is.infinite(), na.rm = T)
+
+#total missing values for plate
+master_list$process_lists$mvLipids[[paste0("allPlates.totalMissingValues")]] <-  rowSums(x= (master_list$process_lists$mvLipids %>%
+                                                                                               select(contains("allPlates"))%>%
+                                                                                               as.matrix()),
+                                                                                         na.rm = T)
+
+#does lipid fail for across all plates?
+# add fail.filter column if lipid failed for a plate or for all plates
+master_list$process_lists$mvLipids[["PROJECT.keepLipid"]] <- 1
+master_list$process_lists$mvLipids[["PROJECT.keepLipid"]][which(
+  rowSums(x= (master_list$process_lists$mvLipids %>%
+                select(contains(".keepLipid[Plate]")) %>%
+                as.matrix()) == 0, 
+          na.rm = T) > 0
+)] <- 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#. --------------
+
+
+## 3. Calculate response ratio and concentration calculations  ------------------------------------------------------
+master_list$data$area_response <- list(); master_list$data$area_concentration <- list()
+
+#run loop per plate|batch data
+
+        
+        #calculate concentration
+        #Find the concentration factor of SIL
+        sil_conc_factor <- master_list$templates$conc_guide$concentration_factor[which(master_list$templates$conc_guide$sil_name == idx_SIL)]
+        if(length(sil_conc_factor) == 1){
+          #select response data
+          target_lipids_conc <- select(master_list$data$area_response[[idx_batch]], any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
+          #apply concentration factor to lipd values
+          master_list$data$area_concentration[[idx_batch]] <- bind_cols(
+            master_list$data$area_concentration[[idx_batch]],
+            as_tibble(target_lipids_conc*sil_conc_factor)
+          )
+        } #close if(length(sil_conc_factor) == 1)
+      } # close if(ncol(target_lipids)>0)
+    } #close if(length(FUNC_SIL_guide$precursor_name[which(FUNC_SIL_guide$note == idx_SIL)])>0){
+  }
+  
+  master_list$data$area_response[[idx_batch]]$sample_data_source <- "response"; 
+  master_list$data$area_concentration[[idx_batch]]$sample_data_source <- "concentration"
+  
+}
+
+
+
+rm(list = c(ls()[which(ls() != "master_list")]))
+
+#.------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+## no signalDrift or batch correction -----------------
+
+
+
+#### b. apply and create filtered dataset -----
+#first set data list
+master_list$data$pp_mvFilter_s <- list()
+#run loop to filter data
+for(idx_batch in names(master_list$data$peakArea$sorted)){
+  master_list$data$pp_mvFilter_s[[idx_batch]] <- master_list$data$peakArea$sorted[[idx_batch]] %>%
+    filter(sample_name %in% master_list$filters$samples.missingValues$sample_name[which(
+      master_list$filters$samples.missingValues$sampleKeep == 1)
+    ])
+}
+
+### 2. missing value lipidFilter ----
+####a. find and count missing values for lipids -----
+master_list$process_lists$mvLipids <- tibble(
+  lipid = master_list$data$pp_mvFilter_s  %>%
+    bind_rows() %>%
+    select(-contains("sample")) %>%
+    names()
+)
+
+for(idx_batch in names(master_list$data$pp_mvFilter_s)){
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".peakArea<5000[LOD]")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) <5000, na.rm = T)
+  
+  #na values
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".naValues")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) %>%
+      is.na(), na.rm = T)
+  
+  #nan values
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".nanValues")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) %>%
+      is.nan(), na.rm = T)
+  
+  #inf values
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".infValues")]] <- colSums(
+    x= (master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+          select(-contains("sample")) %>%
+          as.matrix()) %>%
+      is.infinite(), na.rm = T)
+  
+  #total missing values for plate
+  master_list$process_lists$mvLipids[[paste0(idx_batch,".totalMissingValues")]] <-  rowSums(x= (master_list$process_lists$mvLipids %>%
+                                                                                                 select(contains(idx_batch))%>%
+                                                                                                 as.matrix()),
+                                                                                           na.rm = T)
+  
+  #does lipid fail for the plate?
+  master_list$process_lists$mvLipids[[paste0(idx_batch, ".keepLipid[Plate]")]] <- 1
+  master_list$process_lists$mvLipids[[paste0(idx_batch, ".keepLipid[Plate]")]][which(
+    master_list$process_lists$mvLipids[[paste0(idx_batch,".totalMissingValues")]] > (nrow(master_list$data$pp_mvFilter_s[[idx_batch]]) * 0.5)
+  )] <- 0
+  
+}
+
+#for all plates
+master_list$process_lists$mvLipids[[paste0("allPlates.peakArea<5000[LOD]")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) <5000, na.rm = T)
+
+#na values
+master_list$process_lists$mvLipids[[paste0("allPlates.naValues")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) %>%
+    is.na(), na.rm = T)
+
+#nan values
+master_list$process_lists$mvLipids[[paste0("allPlates.nanValues")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) %>%
+    is.nan(), na.rm = T)
+
+#inf values
+master_list$process_lists$mvLipids[[paste0("allPlates.infValues")]] <- colSums(
+  x= (master_list$data$pp_mvFilter_s %>%
+        bind_rows() %>%
+        select(-contains("sample")) %>%
+        as.matrix()) %>%
+    is.infinite(), na.rm = T)
+
+#total missing values for plate
+master_list$process_lists$mvLipids[[paste0("allPlates.totalMissingValues")]] <-  rowSums(x= (master_list$process_lists$mvLipids %>%
+                                                                                               select(contains("allPlates"))%>%
+                                                                                               as.matrix()),
+                                                                                         na.rm = T)
+
+#does lipid fail for across all plates?
+# add fail.filter column if lipid failed for a plate or for all plates
+master_list$process_lists$mvLipids[["PROJECT.keepLipid"]] <- 1
+master_list$process_lists$mvLipids[["PROJECT.keepLipid"]][which(
+  rowSums(x= (master_list$process_lists$mvLipids %>%
+                select(contains(".keepLipid[Plate]")) %>%
+                as.matrix()) == 0, 
+          na.rm = T) > 0
+)] <- 0
+
+#### b. apply filter and create filtered dataset -----
+#create empty list
+master_list$data$pp_mvFilter_s_l <- list()
+for(idx_batch in names(master_list$data$pp_mvFilter_s)){
+  master_list$data$pp_mvFilter_s_l[[idx_batch]] <- master_list$data$pp_mvFilter_s[[idx_batch]] %>%
+    select(-any_of(
+      (master_list$process_lists$mvLipids %>% filter(get(paste0(idx_batch, ".keepLipid[Plate]")) == 0))[["lipid"]]
+    ))
+  
+  master_list$data$pp_mvFilter_s_l[[idx_batch]]$sample_data_source <- "pp_mvFiltered"
+}
+
+### 3. use missing value filters to filter imputed dataset 
+master_list$data$pp_impute$ <- list()
+for(idx_batch in names(master_list$data$peakArea$imputed)){
+  master_list$data$pp_impute[[idx_batch]] <- master_list$data$peakArea$imputed[[idx_batch]] %>%
+    filter(sample_name %in% master_list$data$pp_mvFilter_s_l[[idx_batch]][["sample_name"]]) %>%
+    select(any_of(names(master_list$data$pp_mvFilter_s_l[[idx_batch]])))
+  
+  master_list$data$pp_impute[[idx_batch]]$sample_data_source <- "pp_impute"
+}
+
+### 3. calculate response ratio and concentration calculations using pp data (post-impute and filter)  ------------------------------------------------------
+
+#* Calculation of target metabolite/stable isotope labelled (SIL) internal standard ratio, using predefined target metabolite/internal standard pairs
+#* Conversion of response ratio to concentration values using single point calibration
+#* Performed on imputed and filtered data
+  master_list$data$pp_response <- list(); master_list$data$pp_concentration <- list()
+  
+  #run loop per plate|batch data
+  for(idx_batch in names(master_list$data$pp_impute)){
+    #set empty list to store output data
+    master_list$data$pp_response[[idx_batch]] <- master_list$data$pp_impute[[idx_batch]] %>% select(contains("sample"))
+    master_list$data$pp_concentration[[idx_batch]] <- master_list$data$pp_impute[[idx_batch]] %>% select(contains("sample"))
+  
+    #run loop for each SIL IS.
+    for(idx_SIL in master_list$data$pp_impute[[idx_batch]] %>% 
+        select(contains("SIL")) %>% 
+        names()){
+      if(length(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])>0){
+        #find which SIL is used from the template
+        target_lipids <- select(
+          master_list$data$pp_impute[[idx_batch]], 
+          any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
+        if(ncol(target_lipids)>0){
+          #calculate response ratio
+          master_list$data$pp_response[[idx_batch]] <- bind_cols(
+            master_list$data$pp_response[[idx_batch]], 
+            as_tibble(target_lipids/master_list$data$pp_impute[[idx_batch]][[idx_SIL]])
+          )
+          
+          #calculate concentration
+          #Find the concentration factor of SIL
+          sil_conc_factor <- master_list$templates$conc_guide$concentration_factor[which(master_list$templates$conc_guide$sil_name == idx_SIL)]
+          if(length(sil_conc_factor) == 1){
+            #select response data
+            target_lipids_conc <- select(
+              master_list$data$pp_response[[idx_batch]], 
+              any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
+            #apply concentration factor to lipd values
+            master_list$data$pp_concentration[[idx_batch]] <- bind_cols(
+              master_list$data$pp_concentration[[idx_batch]],
+              as_tibble(target_lipids_conc*sil_conc_factor)
+            )
+          } #close if(length(sil_conc_factor) == 1)
+        } # close if(ncol(target_lipids)>0)
+      } #close if(length(FUNC_SIL_guide$precursor_name[which(FUNC_SIL_guide$note == idx_SIL)])>0){
+    }
+    
+    
+    master_list$data$pp_response[[idx_batch]]$sample_data_source <- "response.[filtered]"
+    master_list$data$pp_concentration[[idx_batch]]$sample_data_source <- "concentration.[filtered]"
+    
+  }
+
+
+
+#### d. filter statTarget data ----------------
+##### i. for excluded samples ---------
+master_list$data$peakArea$statTargetProcessed_mvFilter_s <- list()
+#loop to back into plate elements of list
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed)){
+  master_list$data$peakArea$statTargetProcessed_mvFilter_s[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed[[idx_batch]] %>%
+    filter(sample_name %in% filter(master_list$filters$samples.missingValues, sampleKeep==1)[["sample_name"]])
+
+  master_list$data$peakArea$statTargetProcessed_mvFilter_s[[idx_batch]]$sample_data_source <- "statTarget_mvFilter_s"
+}
+
+##### ii. filter on excluded lipids -------
+master_list$data$peakArea$statTargetProcessed_mvFilter_s_l <- list()
+#loop to back into plate elements of list
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed_mvFilter_s)){
+  master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_mvFilter_s[[idx_batch]] %>%
+    select(
+      contains("sample"),
+      any_of(filter(master_list$process_lists$mvLipids, get(paste0(idx_batch, ".keepLipid[Plate]")) == 1)[["lipid"]])
+    )
+  
+  master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]]$sample_data_source <- "statTarget_mvFilter_s_l"
+}
+
+rm(list = c(ls()[which(ls() != "master_list")]))
+
+### 2. calculate response and concentration [pp_filtered_statTarget data] ----------
+#set empty list to store output data
+master_list$data$peakArea$statTargetProcessed_response <- list(); master_list$data$peakArea$statTargetProcessed_concentration <- list()
+
+#run loop per plate|batch data
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed_mvFilter_s_l)){
+  #set empty list to store output data
+  master_list$data$peakArea$statTargetProcessed_response[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]] %>% 
+    select(contains("sample"))
+  master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]] %>% 
+    select(contains("sample"))
+  #run loop for each SIL IS.
+  for(idx_SIL in master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]] %>% 
+      select(contains("SIL")) %>% 
+      names()){
+    if(length(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])>0){
+      #find which SIL is used from the template
+      target_lipids <- select(
+        master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]], 
+        any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
+      if(ncol(target_lipids)>0){
+        #calculate response ratio
+        master_list$data$peakArea$statTargetProcessed_response[[idx_batch]] <- bind_cols(
+          master_list$data$peakArea$statTargetProcessed_response[[idx_batch]], 
+          as_tibble(target_lipids/master_list$data$peakArea$statTargetProcessed_mvFilter_s_l[[idx_batch]][[idx_SIL]])
+        )
+        
+        #calculate concentration
+        #Find the concentration factor of SIL
+        sil_conc_factor <- master_list$templates$conc_guide$concentration_factor[which(master_list$templates$conc_guide$sil_name == idx_SIL)]
+        if(length(sil_conc_factor) == 1){
+          #select response data
+          target_lipids_conc <- select(
+            master_list$data$peakArea$statTargetProcessed_response[[idx_batch]], 
+            any_of(master_list$templates$SIL_guide$precursor_name[which(master_list$templates$SIL_guide$note == idx_SIL)])) 
+          #apply concentration factor to lipid values
+          master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]] <- bind_cols(
+            master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]],
+            as_tibble(target_lipids_conc*sil_conc_factor)
+          )
+        } #close if(length(sil_conc_factor) == 1)
+      } # close if(ncol(target_lipids)>0)
+    } #close if(length(FUNC_SIL_guide$precursor_name[which(FUNC_SIL_guide$note == idx_SIL)])>0){
+  }
+  
+  master_list$data$peakArea$statTargetProcessed_response[[idx_batch]]$sample_data_source <- "statTargetResponse.[filtered]"; master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]]$sample_data_source <- "statTargetConcentration.[filterd]"
+}
+
+#make statTargetconcentration mv filtered
+#### d. filter statTarget concentration data ----------------
+##### i. for excluded samples ---------
+master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s <- list()
+#loop to back into plate elements of list
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed_concentration)){
+  master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]] %>%
+    filter(sample_name %in% filter(master_list$filters$samples.missingValues, sampleKeep==1)[["sample_name"]])
+  
+  master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s[[idx_batch]]$sample_data_source <- "statTarget_concentration_mvFilter_s"
+}
+
+##### ii. filter on excluded lipids -------
+master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s_l <- list()
+#loop to back into plate elements of list
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s)){
+  master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s_l[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s[[idx_batch]] %>%
+    select(
+      contains("sample"),
+      any_of(filter(master_list$process_lists$mvLipids, get(paste0(idx_batch, ".keepLipid[Plate]")) == 1)[["lipid"]])
+    )
+  
+  master_list$data$peakArea$statTargetProcessed_concentration_mvFilter_s_l[[idx_batch]]$sample_data_source <- "statTarget_concentration_mvFilter_s_l"
+}
+
+rm(list = c(ls()[which(ls() != "master_list")]))
+
+
+## apply QC %RSD filters to concentration data ---------------------------
+
+### 1. Data filter: QC %RSD filter across user selected LTRs -------------------------
+#### a. intraPlate ------
+#first create a table of rsd performance
+master_list$process_lists$rsd_filter <- tibble(
+  lipid =  names(master_list$data$peakArea$sorted[[1]] %>%
+                   filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+                   select(-contains("sample"))))
+
+#run loop for each dataType: rawArea; concentration; preProcessedConcentration; statTargetConcentration
+for(idx_batch in names(master_list$data$peakArea$sorted)){
+  
+  peakArea_qc_data <- master_list$data$peakArea$sorted[[idx_batch]] %>%
+    filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+    select(-contains("sample"))
+  
+  concentration_qc_data <- master_list$data$area_concentration[[idx_batch]] %>%
+    filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+    select(-contains("sample"))
+  # 
+  preProcessedConcentration_qc_data <- master_list$data$pp_concentration[[idx_batch]] %>%
+    filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+    select(-contains("sample"))
+  
+  statTargetConcentration_qc_data <- master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]] %>%
+    filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+    select(-contains("sample"))
+  
+  #extract RSD performance in peakAreaData
+  master_list$process_lists$rsd_filter <- left_join(
+    master_list$process_lists$rsd_filter,
+    tibble(
+      lipid =  names(peakArea_qc_data),
+      !! paste0("peakArea.", idx_batch) := (colSds(as.matrix(peakArea_qc_data))*100)/colMeans(as.matrix(peakArea_qc_data))
+    ), 
+    by = "lipid")
+  
+  #extract RSD performance in concentrationData
+  master_list$process_lists$rsd_filter <- left_join(
+    master_list$process_lists$rsd_filter,
+    tibble(
+      lipid =  names(concentration_qc_data),
+      !! paste0("concentration.", idx_batch) := (colSds(as.matrix(concentration_qc_data))*100)/colMeans(as.matrix(concentration_qc_data))
+    ), 
+    by = "lipid")
+  
+  #extract RSD performance in preProcessedConcentrationData
+  master_list$process_lists$rsd_filter <- left_join(
+    master_list$process_lists$rsd_filter,
+    tibble(
+      lipid =  names(preProcessedConcentration_qc_data),
+      !! paste0("postFilterConcentration.", idx_batch) := (colSds(as.matrix(preProcessedConcentration_qc_data))*100)/colMeans(as.matrix(preProcessedConcentration_qc_data))
+    ),
+    by = "lipid")
+  
+  #extract RSD performance in statTargetConcentrationData
+  master_list$process_lists$rsd_filter <- left_join(
+    master_list$process_lists$rsd_filter,
+    tibble(
+      lipid =  names(statTargetConcentration_qc_data),
+      !! paste0("postFilterStatTarget.", idx_batch) := (colSds(as.matrix(statTargetConcentration_qc_data))*100)/colMeans(as.matrix(statTargetConcentration_qc_data))
+    ), 
+    by = "lipid")
+  }
+
+#### b. interPlate -----------------------------
+# make rsd values for all plates
+peakArea_qc_data <- bind_rows(master_list$data$peakArea$sorted) %>%
+  filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+  select(-contains("sample"))
+
+concentration_qc_data <- bind_rows(master_list$data$area_concentration) %>%
+  filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+  select(-contains("sample"))
+
+preProcessedConcentration_qc_data <- bind_rows(master_list$data$pp_concentration) %>%
+  filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+  select(-contains("sample"))
+
+#statTargetData
+statTargetConcentration_qc_data <- bind_rows(master_list$data$peakArea$statTargetProcessed_concentration) %>%
+  filter(sample_type_factor == tolower(master_list$project_details$qc_type)) %>%
+  select(-contains("sample"))
+
+#extract RSD performance in peakAreaData
+master_list$process_lists$rsd_filter <- left_join(
+  master_list$process_lists$rsd_filter,
+  tibble(
+    lipid =  names(peakArea_qc_data),
+    !! paste0("peakArea.allPlates") := (colSds(as.matrix(peakArea_qc_data))*100)/colMeans(as.matrix(peakArea_qc_data))
+  ), 
+  by = "lipid")
+
+#extract RSD performance in concentration
+master_list$process_lists$rsd_filter <- left_join(
+  master_list$process_lists$rsd_filter,
+  tibble(
+    lipid =  names(concentration_qc_data),
+    !! paste0("concentration.allPlates") := (colSds(as.matrix(concentration_qc_data))*100)/colMeans(as.matrix(concentration_qc_data))
+  ), 
+  by = "lipid")
+
+#extract RSD performance in preProcessedConcentrationData
+master_list$process_lists$rsd_filter <- left_join(
+  master_list$process_lists$rsd_filter,
+  tibble(
+    lipid =  names(preProcessedConcentration_qc_data),
+    !! paste0("postFilterConcentration.allPlates") := (colSds(as.matrix(preProcessedConcentration_qc_data))*100)/colMeans(as.matrix(preProcessedConcentration_qc_data))
+  ),
+  by = "lipid")
+
+#extract RSD performance in statTargetConcentrationData
+master_list$process_lists$rsd_filter <- left_join(
+  master_list$process_lists$rsd_filter,
+  tibble(
+    lipid =  names(statTargetConcentration_qc_data),
+    !! paste0("postFilterStatTarget.allPlates") := (colSds(as.matrix(statTargetConcentration_qc_data))*100)/colMeans(as.matrix(statTargetConcentration_qc_data))
+  ), 
+  by = "lipid")
+
+### 2. Make QC %RSD filtered datasets perPlate ----
+#### preProcessedConcentration [perPlate] ----
+master_list$data$pp_rsdPlates <- list()
+for(idx_batch in names(master_list$data$pp_concentration)){
+master_list$data$pp_rsdPlates[[idx_batch]] <- master_list$data$pp_concentration[[idx_batch]] %>%
+  select(
+    contains("sample"),
+    any_of(names(which(master_list$process_lists$rsd_filter[[paste0("concentration.", idx_batch)]] < 30)))
+  )
+
+master_list$data$pp_rsdPlates[[idx_batch]]$sample_data_source <- "postFilterConcentration"
+}
+#### statTargetConcentration ----
+master_list$data$peakArea$statTargetProcessed_rsdPlates <- list()
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed_concentration)){
+  master_list$data$peakArea$statTargetProcessed_rsdPlates[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]] %>%
+    select(
+      contains("sample"),
+      any_of(names(which(master_list$process_lists$rsd_filter[[paste0("postFilterStatTarget.", idx_batch)]] < 30)))
+    )
+  
+  master_list$data$peakArea$statTargetProcessed_rsdPlates[[idx_batch]]$sample_data_source <- "postFilterStatTarget"
+}
+#clean environment
+rm(list = c(ls()[which(ls() != "master_list")]))
+
+
+### RSD filtered across total dataSet
+master_list$data$pp_final <- list()
+for(idx_batch in names(master_list$data$pp_concentration)){
+  master_list$data$pp_final[[idx_batch]] <- master_list$data$pp_concentration[[idx_batch]] %>%
+    select(
+      contains("sample"),
+      any_of(names(which(master_list$process_lists$rsd_filter$postFilterConcentration.allPlates < 30)))
+    )
+  
+  master_list$data$pp_final[[idx_batch]]$sample_data_source <- "concentration.[postFilter]"
+}
+
+### RSD filtered across total dataSet
+master_list$data$peakArea$statTargetProcessed_final <- list()
+for(idx_batch in names(master_list$data$peakArea$statTargetProcessed_concentration)){
+  master_list$data$peakArea$statTargetProcessed_final[[idx_batch]] <- master_list$data$peakArea$statTargetProcessed_concentration[[idx_batch]] %>%
+    select(
+      contains("sample"),
+      any_of(names(which(master_list$process_lists$rsd_filter$postFilterStatTarget.allPlates < 30)))
+    )
+  
+  master_list$data$peakArea$statTargetProcessed_final[[idx_batch]]$sample_data_source <- "statTargetConcentration.[postFilter]"
+}
+
+##3. make combined plates dataset for export ----
+
+#concentration data
+#create a combined plate filtered by RSD across all plates
+tempMatrix <- bind_rows(master_list$data$area_concentration) %>%
+  select(contains("sample_name"), 
+         all_of(bind_rows(master_list$data$area_concentration) %>% 
+                  select(-contains("sample")) %>%
+                  names()
+                )) %>%
+  column_to_rownames("sample_name") 
+#replace values < 1 with values with 2 sig figs.
+tempMatrix[is.na(tempMatrix)] <- 0
+tempMatrix[tempMatrix <1] <- signif(tempMatrix[tempMatrix <1], 2)
+tempMatrix[tempMatrix >1] <- round(tempMatrix[tempMatrix >1], 2)
+tempMatrix[tempMatrix == 0] <- NA 
+
+#rebind with sample_name
+master_list$data$area_concentration_final_all_plates <- list(
+  bind_rows(master_list$data$area_concentration) %>%
+    select(contains("sample")) %>%
+    left_join(.,
+              tempMatrix %>% 
+                rownames_to_column("sample_name"),
+              by = "sample_name"))
+
+
+#postFilterConcentration data
+#create a combined plate filtered by RSD across all plates
+tempMatrix <- bind_rows(master_list$data$pp_final) %>%
+  select("sample_name", any_of(names(master_list$data$pp_final[[1]] %>% select(-contains("sample"))))) %>%
+  column_to_rownames("sample_name") 
+#replace values < 1 with values with 2 sig figs.
+tempMatrix[tempMatrix <1] <- signif(tempMatrix[tempMatrix <1], 2)
+tempMatrix[tempMatrix >1] <- round(tempMatrix[tempMatrix >1], 2)
+
+#rebind with sample_name
+master_list$data$pp_final <- list(
+  bind_rows(master_list$data$pp_final[[1]]) %>%
+    select(contains("sample")) %>%
+    left_join(.,
+              tempMatrix %>% 
+                rownames_to_column("sample_name"),
+              by = "sample_name"))
+
+  
+#and for statTarget data
+tempMatrix <- bind_rows(master_list$data$peakArea$statTargetProcessed_final) %>%
+  select("sample_name", any_of(names(master_list$data$peakArea$statTargetProcessed_final[[1]] %>% select(-contains("sample"))))) %>%
+  column_to_rownames("sample_name") 
+#replace values < 1 with values with 2 sig figs.
+tempMatrix[tempMatrix <1] <- signif(tempMatrix[tempMatrix <1], 2)
+tempMatrix[tempMatrix >1] <- round(tempMatrix[tempMatrix >1], 2)
+
+#rebind with sample_name
+master_list$data$peakArea$statTargetProcessed_final <- list(
+  bind_rows(master_list$data$peakArea$statTargetProcessed_final[[1]]) %>%
+    select(contains("sample")) %>%
+    left_join(.,
+              tempMatrix %>% 
+                rownames_to_column("sample_name"),
+              by = "sample_name"))
 

@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" version="24.7.10">
+  <diagram name="Page-1" id="9fI6pqu8Fx6ln3HihKtr">
+    <mxGraphModel dx="1177" dy="862" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-1" value="lipidExploreR" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="10" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="o0Brrs1FIPzQ7kd25uqs-2" target="o0Brrs1FIPzQ7kd25uqs-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-2" value="skylineR" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-3" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="o0Brrs1FIPzQ7kd25uqs-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="390" y="420" as="sourcePoint" />
+            <mxPoint x="430" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-5" value="optimise RT of&amp;nbsp;&lt;div&gt;peak apex&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="o0Brrs1FIPzQ7kd25uqs-6" target="o0Brrs1FIPzQ7kd25uqs-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-6" value="optimise&amp;nbsp;&lt;div&gt;integration&amp;nbsp;&lt;/div&gt;&lt;div&gt;boundary&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-8" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="o0Brrs1FIPzQ7kd25uqs-5" target="o0Brrs1FIPzQ7kd25uqs-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="390" y="520" as="sourcePoint" />
+            <mxPoint x="440" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="o0Brrs1FIPzQ7kd25uqs-11" target="o0Brrs1FIPzQ7kd25uqs-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-11" value="transfer to&amp;nbsp;&lt;div&gt;skyline to&lt;/div&gt;&lt;div&gt;perform peak integration&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="460" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-13" value="Transfer to QC.checkeR" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="550" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-15" value="import mzml&amp;nbsp;&lt;div&gt;data&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="370" y="190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-17" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="o0Brrs1FIPzQ7kd25uqs-15" target="o0Brrs1FIPzQ7kd25uqs-5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="390" y="420" as="sourcePoint" />
+            <mxPoint x="440" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-20" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.annotation_2;align=left;labelPosition=right;pointerEvents=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="90" width="50" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="o0Brrs1FIPzQ7kd25uqs-21" value="Performed per plate/batch" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
