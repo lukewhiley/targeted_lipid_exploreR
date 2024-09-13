@@ -1594,13 +1594,13 @@ openxlsx::write.xlsx(
 
 ### 5.2.a. download template ----
 fileConn<-file(paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_template_v4.R"))
-writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "/templates/TEMPLATE_lipidExploreR_report_v3.3.R")) %>%
+writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "/templates/lipid_exploreR_report_template_v4.R")) %>%
              httr::content(as = "text"), fileConn)
 close(fileConn)
 
 
 ### 2. render template ----
-rmarkdown::render(input = paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_templatev4.R"),
+rmarkdown::render(input = paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_template_v4.R"),
                   output_format = "html_document",
                   output_dir = paste0(master_list$project_details$project_dir, "/html_report"),
                   output_file = paste0(Sys.Date(), "_", master_list$project_details$project_name, "_LGW_lipidExploreR_qcCheckeR_report_v4.html")
