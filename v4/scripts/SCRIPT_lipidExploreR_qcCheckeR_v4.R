@@ -290,7 +290,7 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
 ## 1.5. statTarget signalDrift | batch correction ----------------------------
 
 #set qc-type
-master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget - tag MUST be in filename of mzML files (matched case)", "vLTR/LTR/PQC - default is vLTR")$res
+master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget", "vLTR/LTR/PQC - default is vLTR")$res
 
 #flag low number of QCs
 if(length(which(tolower(master_list$data$peakArea$imputed$plate02$sample_type_factor) == tolower(master_list$project_details$statTarget_qc_type))) < 6){
@@ -674,6 +674,8 @@ rm(list = c(ls()[which(ls() != "master_list")]))
 # First the filtering is performed per sample to identify failed samples (e.g. injection, extraction, preparation errors, or if sample is missing from well) it will return a high % of missing values
 # Once failed samples have been identified - the filtering then identifies lipids that have >50% missing values
 # note: missing also refers to <limit of detection [<LOD]. This refers to instances of peak areas that are <5000 counts, as skyline will sometimes integrate noise giving a small value.
+
+master_list$project_details$qc_type <- dlgInput("qc type for preProcessing/filtering", "LTR/PQC")$res
 
 master_list$filters <- list()
 
