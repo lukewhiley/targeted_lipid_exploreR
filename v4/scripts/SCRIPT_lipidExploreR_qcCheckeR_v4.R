@@ -680,6 +680,7 @@ master_list$project_details$qc_type <- dlgInput("qc type for preProcessing/filte
 master_list$filters <- list()
 
 ## 2.1. sample filter [missing value] -------
+master_list$project_details$mv_sample_threshold <- dlgInput("set missing value threshold % for sample flagging. e.g. exclude sample if it has > x% missing lipids", "50 [default]")$res %>% as.numeric()
 master_list$filters$samples.missingValues <- list()
 # complete on raw uncorrected peakArea data
 master_list$filters$samples.missingValues <- master_list$data$peakArea$sorted %>%
@@ -778,22 +779,22 @@ master_list$filters$samples.missingValues[["totalMissingValues[SIL.Int.Stds]"]] 
 
 #sample removed?
 master_list$filters$samples.missingValues$sampleKeep <- 1
-#remove where missing data >50% total lipidTargets
+#remove where missing data >mv_sample_threshold [default = 50%] total lipidTargets
 master_list$filters$samples.missingValues$sampleKeep[which(
   master_list$filters$samples.missingValues$`totalMissingValues[lipidTarget]` > ((
     bind_rows(master_list$data$peakArea$sorted) %>%
       select(-contains("sample")) %>%
       select(-contains("SIL")) %>%
-      ncol())*0.5)
+      ncol())*(master_list$project_details$mv_sample_threshold/100))
 )] <- 0
 
-#remove where missing (<LOD) data >50% total SIL.int.Stds
+#remove where missing (<LOD) data > 33% total SIL.int.Stds (all IS should always be present so more stringent filter)
 master_list$filters$samples.missingValues$sampleKeep[which(
   master_list$filters$samples.missingValues$`totalMissingValues[SIL.Int.Stds]` > ((bind_rows(
     master_list$data$peakArea$sorted) %>%
       select(-contains("sample")) %>%
       select(contains("SIL")) %>%
-      ncol())*0.5)
+      ncol())*(0.33))
 )] <- 0
 
 #create failed sample list
@@ -849,7 +850,7 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
                                                                                                   as.matrix()),
                                                                                             na.rm = T)
   
-  #Keep SIL intStd if has <80% missing values
+  #Keep SIL intStd if has <20% missing values
   master_list$filters$sil.intStd.missingValues[[paste0(idx_batch, ".keepSIL.intStd[Plate]")]] <- 1
   master_list$filters$sil.intStd.missingValues[[paste0(idx_batch, ".keepSIL.intStd[Plate]")]][which(
   master_list$filters$sil.intStd.missingValues[[paste0(idx_batch,".totalMissingValues")]] > (nrow(
