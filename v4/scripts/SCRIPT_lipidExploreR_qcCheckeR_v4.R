@@ -675,7 +675,7 @@ rm(list = c(ls()[which(ls() != "master_list")]))
 # Once failed samples have been identified - the filtering then identifies lipids that have >50% missing values
 # note: missing also refers to <limit of detection [<LOD]. This refers to instances of peak areas that are <5000 counts, as skyline will sometimes integrate noise giving a small value.
 
-master_list$project_details$qc_type <- dlgInput("qc type for preProcessing/filtering", "LTR/PQC")$res
+master_list$project_details$qc_type <- dlgInput("qc type for preProcessing/filtering", "LTR/PQC (use PQC if one is available. Otherwise use LTR)")$res
 
 master_list$filters <- list()
 
