@@ -18,14 +18,10 @@ for(idx_package in package_list){
 
 #welcome messages
 #if(!exists("master_list")){
-dlg_message("Welcome to lipid qc exploreR! :-)", type = 'ok'); dlg_message("please run the skylineR script (perPlate) before running this script", type = 'ok'); dlg_message("if combining multiple plates/batches select parent master folder. e.g. ~parent/skylineR_plate01; ~parent/skylineR_plate02", type = 'ok');       
+dlg_message("Welcome to lipid qc exploreR! :-)", type = 'ok'); dlg_message("please run the skylineR script (perPlate) before running this script", type = 'ok'); dlg_message("select project parent master folder. e.g. ~projects/parent/", type = 'ok');  
 # choose directory
 dlg_message("select parent master folder with skylineR subfolders", type = 'ok');skylineR_directory <- rstudioapi::selectDirectory()
-#setup project sub-directories
-#data
-if(!dir.exists(paste0(skylineR_directory, "/data"))){dir.create(paste0(skylineR_directory, "/data"))}
-#rda
-if(!dir.exists(paste0(skylineR_directory, "/data/rda"))){dir.create(paste0(skylineR_directory, "/data/rda"))}
+#set up project folders for QC checkR
 #batch_correct
 if(!dir.exists(paste0(skylineR_directory, "/data/batch_correction"))){dir.create(paste0(skylineR_directory, "/data/batch_correction"))}
 #html_reports
@@ -33,10 +29,31 @@ if(!dir.exists(paste0(skylineR_directory, "/html_report"))){dir.create(paste0(sk
 #xlsx_reports
 if(!dir.exists(paste0(skylineR_directory, "/xlsx_report"))){dir.create(paste0(skylineR_directory, "/xlsx_report"))}
 
+#selct what plates to qc
+tempQCflag <- dlgInput("which plate do you want to QC. must match plate subfolder OR if you want to qc all plates select all", "p0xy or all")$res
+
+#does plate subfolder exist
+if(!dir.exists(paste0(skylineR_directory, "/", tempQCflag))){
+  dlg_message(paste0(skylineR_directory, "/", tempQCflag, " does not exist. check and re-run script"), type = 'ok')
+}
+
+#add plateTag
+if(dir.exists(paste0(skylineR_directory, "/", tempQCflag))){
+  skylineR_directory <- paste0(skylineR_directory, "/", tempQCflag)
+}
+
 #list .rda files
 rda_fileList <- list.files(skylineR_directory, pattern = "_skylineR_", recursive = TRUE)
 #ensure only .rda files are in filelist
 rda_fileList <- rda_fileList[grepl(".rda", rda_fileList, ignore.case = T)]
+
+#remove any tagged with archive
+rda_fileList <- rda_fileList[!grepl("archive", rda_fileList)]
+
+#display rda for assessment
+dlg_message(paste0("To remove any .rda from procesing workflow move them to a sub-folder tagged `archive`. The following .rda are currently selected for QC........:  ~/", 
+                   paste0(rda_fileList, collapse = ";    ~/")), 
+            type = 'ok')
 
 if(length(rda_fileList)>0){
 #load 1st rda 
@@ -44,12 +61,13 @@ if(length(rda_fileList)>0){
 } else {
   print(paste0("no .rda present in ", skylineR_directory))
 }
+
 #set user
-master_list$project_details$user_name <- dlgInput("user", "example_initials")$res
+master_list$project_details$user_name <- dlgInput("set user", master_list$project_details$user_name)$res
 #set project name
-master_list$project_details$project_name <- dlgInput("project", basename(paste0(master_list$project_details$project_dir)))$res
+master_list$project_details$project_name <- dlgInput("project", master_list$project_details$project_name)$res
 #set qc-type
-master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = pre-2023, v2 = post-2023)", "v1/v2")$res
+master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = pre-2023, v2 = post-2023)", master_list$project_details$is_ver)$res
 #reset parent directory
 master_list$summary_tables$project_summary$value[which(master_list$summary_tables$project_summary$`Project detail` == "local directory")] <- skylineR_directory
 master_list$project_details$project_dir <- skylineR_directory
@@ -132,6 +150,9 @@ master_list$data$peakArea <- list()
 master_list$data$peakArea$skylineReport <- master_list$data$skyline_report
 #remove skyline report
 master_list$data$skyline_report <- NULL
+#set batches (plates)
+master_list$project_details$mzml_plate_list <- tempQCflag
+
 ## 1.2. transpose data to standard metabolomics structure (features in columns, samples in rows) ---------------------------------------
 master_list$data$peakArea$transposed <- list()
 #run loop for each data plate/batch
@@ -290,12 +311,16 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
 ## 1.5. statTarget signalDrift | batch correction ----------------------------
 
 #set qc-type
-master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget", "vLTR/LTR/PQC - default is vLTR")$res
+master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget", "VLTR/LTR/PQC - default is VLTR")$res
 
 #flag low number of QCs
-if(length(which(tolower(master_list$data$peakArea$imputed$plate02$sample_type_factor) == tolower(master_list$project_details$statTarget_qc_type))) < 6){
+for(idxPlate in names(master_list$data$peakArea$imputed)){
+  qcCount <- length(which(tolower(master_list$data$peakArea$imputed[[idxPlate]]$sample_type_factor) == tolower(master_list$project_details$statTarget_qc_type)))
+  dlg_message(paste0(idxPlate, " has ", qcCount, " ", master_list$project_details$statTarget_qc_type, "s for use by statTarget"), "ok")
+  if(max(qcCount) < 6){
   dlg_message("you do not have enough QCs for statTarget. Skipping.", type = 'ok')
   FUNC_list$corrected_data$data <- NULL
+}
 }
 
 #create batch correction directory
@@ -676,6 +701,7 @@ rm(list = c(ls()[which(ls() != "master_list")]))
 # note: missing also refers to <limit of detection [<LOD]. This refers to instances of peak areas that are <5000 counts, as skyline will sometimes integrate noise giving a small value.
 
 master_list$project_details$qc_type <- dlgInput("qc type for preProcessing/filtering  [NOTE: use PQC if one is available. Otherwise use LTR]", "PQC/LTR")$res
+
 
 master_list$filters <- list()
 

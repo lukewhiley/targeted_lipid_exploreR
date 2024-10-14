@@ -10,14 +10,16 @@ master_list$environment$base_packages <- sessionInfo()$basePkgs
 master_list$environment$user_packages <- paste0(names(sessionInfo()$otherPkgs), ": ", paste0(installed.packages()[names(sessionInfo()$otherPkgs), "Version"]))
 
 ##USER INPUT##
-#set project details
-dlg_message("select project directory", type = 'ok');master_list$project_details$project_dir <- rstudioapi::selectDirectory()
+#create project folder structure
+dlg_message("select project directory.", type = 'ok');master_list$project_details$project_dir <- rstudioapi::selectDirectory()
 #set lipidExploreR version
-master_list$project_details$lipidExploreR_version <- "3.23"
+master_list$project_details$lipidExploreR_version <- "4"
 #set user
 master_list$project_details$user_name <- dlgInput("user", "example_initials")$res
 #set project name
 master_list$project_details$project_name <- dlgInput("project", basename(paste0(master_list$project_details$project_dir)))$res
+#set plateID
+master_list$project_details$plateID <- dlgInput("plate", "p0xy")$res
 #set qc-type
 master_list$project_details$qc_type <- dlgInput("qc type used - tag MUST be in filename of mzML files (matched case)", "LTR/SR/PQC")$res
 #set qc-type
@@ -25,7 +27,7 @@ master_list$project_details$is_ver <- dlgInput("SIL internal standard version us
 #create summary table for report
 master_list$summary_tables$project_summary <- tibble(unlist(master_list$project_details)) %>%
   add_column("Project detail" = c(
-    "local directory", "lipidExploreR version", "user initials", "project name", "project qc type", "int. std. version"),
+    "local directory", "lipidExploreR version", "user initials", "project name", "plateID", "project qc type", "int. std. version"),
              .before = 1)
 master_list$summary_tables$project_summary <- setNames(master_list$summary_tables$project_summary, c("Project detail", "value"))
 
@@ -33,20 +35,24 @@ master_list$summary_tables$project_summary <- setNames(master_list$summary_table
 master_list$project_details$github_master_dir <- "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR/main/v4"
 
 #setup project directories
+#plate
+if(!dir.exists(paste0(master_list$project_details$project_dir, "/", master_list$project_details$plateID))){dir.create(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID))}
 #data
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data"))){dir.create(paste0(master_list$project_details$project_dir, "/data"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir, "/", master_list$project_details$plateID,"/data"))){dir.create(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID, "/data"))}
 #mzml
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/mzml"))){dir.create(paste0(master_list$project_details$project_dir, "/data/mzml"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir,"/", master_list$project_details$plateID, "/data/mzml"))){dir.create(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/data/mzml"))}
+#mzmlPlate
+#if(!dir.exists(paste0(master_list$project_details$project_dir,"/", master_list$project_details$plateID, "/data/mzml/", master_list$project_details$plateID))){dir.create(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/data/mzml/", master_list$project_details$plateID))}
 #rda
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/rda"))){dir.create(paste0(master_list$project_details$project_dir, "/data/rda"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID, "/data/rda"))){dir.create(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/data/rda"))}
 #skyline
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/skyline"))){dir.create(paste0(master_list$project_details$project_dir, "/data/skyline"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/data/skyline"))){dir.create(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID, "/data/skyline"))}
 #sciex
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/sciex_raw"))){dir.create(paste0(master_list$project_details$project_dir, "/data/sciex_raw"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/data/sciex_raw"))){dir.create(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID, "/data/sciex_raw"))}
 #batch_correct
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/batch_correction"))){dir.create(paste0(master_list$project_details$project_dir, "/data/batch_correction"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/data/batch_correction"))){dir.create(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID, "/data/batch_correction"))}
 #html_reports
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/html_report"))){dir.create(paste0(master_list$project_details$project_dir, "/html_report"))}
+if(!dir.exists(paste0(master_list$project_details$project_dir,"/",master_list$project_details$plateID, "/html_report"))){dir.create(paste0(master_list$project_details$project_dir, "/",master_list$project_details$plateID, "/html_report"))}
 
 #read in mrm_guide from github
 if(master_list$project_details$is_ver == "v1"){
@@ -69,46 +75,54 @@ master_list$environment$user_functions$mrm_RT_findeR_mzR <- source(paste0(
   master_list$project_details$github_master_dir , 
   "/functions/FUNC_lipidExploreR_MRM_findeR_pwiz3019_mzR_v4.R"))
 
-dlg_message("convert SCIEX files to mzML", type = 'ok'); dlg_message(paste0("mzML directory: [", paste0(master_list$project_details$project_dir, "/data/mzml"), "]"), type = 'ok'); dlg_message("put mzML files in sub folders per plate [/data/mzml/plate_1; /data/mzml/plate_2] etc")
+#read mzML list
+dlg_message("convert SCIEX files to mzML", type = 'ok'); dlg_message(paste0("mzML directory: [", paste0(master_list$project_details$project_dir,"/" ,master_list$project_details$plateID,  "/data/mzml"), "]"), type = 'ok'); 
+dlg_message("NOTE - IT IS NO LONGER NECESSARY TO PUT MZML IN SUBFOLDERS PER PLATE"); dlg_message(paste0("PUT MZML DATA HERE: [", paste0(master_list$project_details$project_dir,"/" ,master_list$project_details$plateID,  "/data/mzml/"), "]"), type = 'ok');
 
-master_list$project_details$mzml_plate_list <- list.dirs(paste0(master_list$project_details$project_dir, 
-                                                                "/data/mzml"),
-                                                         recursive = FALSE,
-                                                         full.names = FALSE)
 
-dlg_message(paste0("there are ", length(master_list$project_details$mzml_plate_list), " plates of samples"), type = 'ok')
+#archive no longer necessary - now process per plate
+
+# master_list$project_details$mzml_plate_list <- list.dirs(paste0(master_list$project_details$project_dir, "/",
+#                                                                 master_list$project_details$plateID,
+#                                                                 "/data/mzml"),
+#                                                          recursive = FALSE,
+#                                                          full.names = FALSE)
+# 
+# dlg_message(paste0("there are ", length(master_list$project_details$mzml_plate_list), " plates of samples"), type = 'ok')
 
 # PROCESS: IMPORT mzML FILES USING mzR ------------------------------------
 mzml_filelist <- list() 
-plate_list <- NULL
-for(idx_plate in master_list$project_details$mzml_plate_list){
+idx_plate <- master_list$project_details$plateID
+#plate_list <- NULL
   mzml_filelist[[idx_plate]] <- list.files(paste0(master_list$project_details$project_dir, 
-                                                  "/data/mzml/",
-                                                  idx_plate),
+                                                  "/",
+                                                  master_list$project_details$plateID,
+                                                  "/data/mzml/"),
                                            pattern = ".mzML",
                                            full.names = FALSE)
   
-  plate_list <- c(plate_list, paste0(idx_plate," = ", length(mzml_filelist[[idx_plate]]), " samples; "))
-}
+  plate_list <- c(paste0(idx_plate," = ", length(mzml_filelist[[idx_plate]]), " samples; "))
+
 
 dlg_message(plate_list, type = 'ok')
 
 master_list$project_details$mzml_sample_list <- NULL
-for(idx_plate in master_list$project_details$mzml_plate_list){
+#for(idx_plate in master_list$project_details$mzml_plate_list){
   master_list$data$mzR[[idx_plate]] <- list()
   #read in mzML files using mzR
   for(idx_mzML in mzml_filelist[[idx_plate]]){
     master_list$data$mzR[[idx_plate]][[idx_mzML]] <- list()
     master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_object <- mzR::openMSfile(
       filename = paste0(master_list$project_details$project_dir, 
-                        "/data/mzml/",
-                        idx_plate,"/", idx_mzML))
+                        "/",
+                        master_list$project_details$plateID,
+                        "/data/mzml/", idx_mzML))
     master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_header <- mzR::chromatogramHeader(master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_object)
     master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram <- mzR::chromatograms(master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_object)
     master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_timestamp <- master_list$data$mzR[[idx_plate]][[idx_mzML]]$mzR_object@backend$getRunStartTimeStamp()
   }
   master_list$project_details$mzml_sample_list <- c(master_list$project_details$mzml_sample_list, names(master_list$data$mzR[[idx_plate]]))
-}
+#}
 
 #######
 # Retention time optimiser
@@ -123,19 +137,15 @@ master_list$templates$mrm_guides <- master_list$environment$user_functions$mrm_R
 master_list$templates$mrm_guides$mrm_guide_updated <- setNames(master_list$templates$mrm_guides$mrm_guide_updated,
                                                                names(master_list$templates$mrm_guides$mrm_guide))
 
-#create directory for storing skyline exports
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/skyline"))){
-  dir.create(paste0(master_list$project_details$project_dir, "/data/skyline"))
-}
 
 #export updated optimised RT times
 write_csv(x = master_list$templates$mrm_guides$mrm_guide_updated,
-          file = paste0(master_list$project_details$project_dir, "/data/skyline/", Sys.Date(), "_RT_update_", 
+          file = paste0(master_list$project_details$project_dir,"/", master_list$project_details$plateID, "/data/skyline/", Sys.Date(), "_RT_update_", 
                         master_list$project_details$project_name, ".csv"))
 
 #export peak boundary output
 write_csv(x = master_list$templates$mrm_guides$peak_boundary_update,
-          file = paste0(master_list$project_details$project_dir, "/data/skyline/", Sys.Date(), "_peak_boundary_update_", 
+          file = paste0(master_list$project_details$project_dir, "/", master_list$project_details$plateID, "/data/skyline/", Sys.Date(), "_peak_boundary_update_", 
                         master_list$project_details$project_name, ".csv"))
 
 
@@ -148,17 +158,14 @@ dlg_message("6. Import the new skylineR_boundary_update.csv transition list from
 
 #re_import skyline file
 master_list$data$skyline_report <- read_csv(file = paste0(list.files(
-  paste0(master_list$project_details$project_dir, "/data/skyline"),
+  paste0(master_list$project_details$project_dir,  "/", master_list$project_details$plateID,  "/data/skyline"),
   pattern = "xskylineR", full.names = TRUE)), show_col_types = FALSE) %>% mutate_at(
     vars("Precursor Mz", "Product Mz", "Retention Time", "Start Time", "End Time", "Area", "Height"), 
     as.numeric) %>% clean_names()
 
-
-#create directory for exporting rda files
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/rda"))){
-  dir.create(paste0(master_list$project_details$project_dir, "/data/rda"))
-}
-
-save(master_list, file = paste0(master_list$project_details$project_dir,"/data/rda/", Sys.Date(), "_skylineR_", master_list$project_details$project_name, ".rda"))
-
+#clean environment
 rm(list = c(ls()[which(ls() != "master_list")]))
+
+#export .rda
+save(master_list, file = paste0(master_list$project_details$project_dir, "/", master_list$project_details$plateID,"/data/rda/", Sys.Date(), "_skylineR_", master_list$project_details$project_name, ".rda"))
+
