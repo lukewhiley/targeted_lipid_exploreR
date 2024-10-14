@@ -21,16 +21,14 @@ for(idx_package in package_list){
 dlg_message("Welcome to lipid qc exploreR! :-)", type = 'ok'); dlg_message("please run the skylineR script (perPlate) before running this script", type = 'ok'); dlg_message("select project parent master folder. e.g. ~projects/parent/", type = 'ok');  
 # choose directory
 dlg_message("select parent master folder with skylineR subfolders", type = 'ok');skylineR_directory <- rstudioapi::selectDirectory()
-#set up project folders for QC checkR
-#batch_correct
-if(!dir.exists(paste0(skylineR_directory, "/data/batch_correction"))){dir.create(paste0(skylineR_directory, "/data/batch_correction"))}
-#html_reports
-if(!dir.exists(paste0(skylineR_directory, "/html_report"))){dir.create(paste0(skylineR_directory, "/html_report"))}
-#xlsx_reports
-if(!dir.exists(paste0(skylineR_directory, "/xlsx_report"))){dir.create(paste0(skylineR_directory, "/xlsx_report"))}
 
 #selct what plates to qc
 tempQCflag <- dlgInput("which plate do you want to QC. must match plate subfolder OR if you want to qc all plates select all", "p0xy or all")$res
+
+#rda
+if(tempQCflag == "all"){
+  dir.create(paste0(skylineR_directory,"/", tempQCflag))
+  }
 
 #does plate subfolder exist
 if(!dir.exists(paste0(skylineR_directory, "/", tempQCflag))){
@@ -39,7 +37,10 @@ if(!dir.exists(paste0(skylineR_directory, "/", tempQCflag))){
 
 #add plateTag
 if(dir.exists(paste0(skylineR_directory, "/", tempQCflag))){
+  #take back up directory for all plates (want parent directory)
+  skylineR_directory_all <- skylineR_directory
   skylineR_directory <- paste0(skylineR_directory, "/", tempQCflag)
+  if(tempQCflag == "all"){skylineR_directory <- skylineR_directory_all}
 }
 
 #list .rda files
@@ -51,8 +52,9 @@ rda_fileList <- rda_fileList[grepl(".rda", rda_fileList, ignore.case = T)]
 rda_fileList <- rda_fileList[!grepl("archive", rda_fileList)]
 
 #display rda for assessment
-dlg_message(paste0("To remove any .rda from procesing workflow move them to a sub-folder tagged `archive`. The following .rda are currently selected for QC........:  ~/", 
-                   paste0(rda_fileList, collapse = ";    ~/")), 
+dlg_message(paste0("To remove any .rda from procesing workflow move them to a sub-folder tagged `archive`. The following .rda are currently selected for QC........ |  ~/", 
+                   paste0(rda_fileList, collapse = " |   ~/"),
+                   " | "), 
             type = 'ok')
 
 if(length(rda_fileList)>0){
@@ -109,6 +111,14 @@ if(length(rda_fileList) > 1){
 #reset to master_list for remainder of script and removal of masterlistBatchObject
 master_list <- masterListBatch; rm(masterListBatch)
 
+#set skyline directory if all plates
+if(tempQCflag == "all"){
+skylineR_directory <- paste0(skylineR_directory, "/", tempQCflag)
+}
+
+master_list$project_details$project_dir <- skylineR_directory
+
+
 #set version of lipidExploreR used
 master_list$project_details$lipidExploreR_version <- "4.0"
 master_list$project_details$qcCheckR_version <- "4.0"
@@ -149,9 +159,21 @@ master_list$data$peakArea <- list()
 ## 1.1. move skyline data and nest under peakArea ------
 master_list$data$peakArea$skylineReport <- master_list$data$skyline_report
 #remove skyline report
-master_list$data$skyline_report <- NULL
+#master_list$data$skyline_report <- NULL
+
 #set batches (plates)
+if(tempQCflag != "all"){
 master_list$project_details$mzml_plate_list <- tempQCflag
+}
+
+if(tempQCflag == "all"){
+  master_list$project_details$mzml_plate_list <- list.dirs(sub("/all","",skylineR_directory), full.names = FALSE, recursive = FALSE)
+  master_list$project_details$mzml_plate_list <- master_list$project_details$mzml_plate_list[grepl("p", master_list$project_details$mzml_plate_list)]
+  master_list$project_details$mzml_plate_list <- master_list$project_details$mzml_plate_list[!grepl("archive", master_list$project_details$mzml_plate_list)]
+  master_list$project_details$mzml_plate_list <- master_list$project_details$mzml_plate_list[!grepl("all", master_list$project_details$mzml_plate_list)]
+}
+
+dlg_message(paste0("subfolders with plates for QC are: | ", paste0(master_list$project_details$mzml_plate_list, collapse = " | "), " | . . . . . if any are incorrect check and re-run script"), "ok")
 
 ## 1.2. transpose data to standard metabolomics structure (features in columns, samples in rows) ---------------------------------------
 master_list$data$peakArea$transposed <- list()
@@ -324,13 +346,36 @@ for(idxPlate in names(master_list$data$peakArea$imputed)){
 }
 
 #create batch correction directory
-if(!dir.exists(paste0(master_list$project_details$project_dir, "/data/batch_correction"))){
-  dir.create(paste0(master_list$project_details$project_dir, "/data/batch_correction"))
+#data
+if(!dir.exists(paste0(skylineR_directory, "/data"))){
+  dir.create(paste0(skylineR_directory, "/data"))
 }
+
+if(!dir.exists(paste0(skylineR_directory, "/data/batch_correction"))){
+  dir.create(paste0(skylineR_directory, "/data/batch_correction"))
+}
+
+if(!dir.exists(paste0(skylineR_directory, "/data/rda/"))){
+  dir.create(paste0(skylineR_directory, "/data/rda/"))
+}
+
+if(!dir.exists(paste0(skylineR_directory, "/data/batch_correction"))){
+  dir.create(paste0(skylineR_directory, "/data/batch_correction"))
+}
+
+if(!dir.exists(paste0(skylineR_directory, "/xlsx_report"))){
+  dir.create(paste0(skylineR_directory, "/xlsx_report"))
+}
+
+if(!dir.exists(paste0(skylineR_directory, "/html_report"))){
+  dir.create(paste0(skylineR_directory, "/html_report"))
+}
+
+
 
 #create data list 
 FUNC_list <- list()
-FUNC_list$project_dir <- paste0(master_list$project_details$project_dir,
+FUNC_list$project_dir <- paste0(skylineR_directory,
                                 "/data/batch_correction")
 
 #create directories 
@@ -602,8 +647,6 @@ for(idx_batch in unique(FUNC_list$corrected_data$data_qc_mean_adjusted$sample_pl
   #set dataSource
   master_list$data$peakArea$statTargetProcessed[[idx_batch]]$sample_data_source <- "peakArea.statTarget"
 }
-
-
 
 #reset wd to project dir
 setwd(master_list$project_details$project_dir)
@@ -1580,6 +1623,7 @@ master_list$summary_tables$odsAreaOverview <- rbind(
   as_tibble() 
 
 ### 5.1.b. write .xlsx tabbed file ----
+
 openxlsx::write.xlsx(
   file = paste0(master_list$project_details$project_dir, 
                 "/xlsx_report/",
