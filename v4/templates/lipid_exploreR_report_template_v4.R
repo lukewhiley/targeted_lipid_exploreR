@@ -1,5 +1,5 @@
 #' ---
-#' title: "Targeted Lipid ExploreR QC Report v3.35"
+#' title: "Targeted Lipid ExploreR QC Report v4"
 #' author: ANPC
 #' output: html_document
 #' 
