@@ -1,6 +1,9 @@
 # . ------------------------------------------------------------------------------------------------------------------------------  
 # PROJECT SETUP: --------------------------------------
 ## 1. load packages: --------------------------------------
+#clean skylineR/previous session
+rm(master_list)
+#load packages
 package_list <- c('svDialogs', 'plyr', 'tidyverse', 'plotly', 'statTarget', 'janitor', 'ropls', 'knitr', 'mzR', 'httr', 'matrixStats', 'openxlsx')
 
 for(idx_package in package_list){
