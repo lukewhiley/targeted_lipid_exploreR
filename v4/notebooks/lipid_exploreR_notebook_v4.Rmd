@@ -26,7 +26,7 @@ REQUIREMENTS:
 ```{r lipid_skylineR, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
 
 #### load packages
-package_list <- c('svDialogs', 'plyr', 'tidyverse', 'ggpubr', 'janitor', 'shiny', 'plotly', 'statTarget', 'metabom8', 'knitr', 'viridisLite', 'mzR', 'httr', 'cowplot', 'matrixStats')
+package_list <- c('statTarget', 'svDialogs', 'ggpubr', 'janitor', 'plotly', 'knitr', 'viridisLite', 'mzR', 'httr', 'cowplot', 'matrixStats', 'tidyverse')
 
 for(idx_package in package_list){
   if(length(which(row.names(installed.packages()) == idx_package)) > 0){
@@ -64,7 +64,7 @@ IMPORTANT INFORMATION PRIOR TO USING:
 
 ```{r lipidQC_exploreR, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
 #### load packages
-package_list <- c('svDialogs', 'plyr', 'tidyverse', 'ggpubr', 'janitor', 'shiny', 'plotly', 'statTarget', 'metabom8', 'knitr', 'viridisLite', 'mzR', 'httr', 'cowplot', 'matrixStats')
+package_list <- c('statTarget', 'svDialogs', 'ggpubr', 'janitor', 'plotly', 'knitr', 'viridisLite', 'mzR', 'httr', 'cowplot', 'matrixStats', 'tidyverse')
 
 for(idx_package in package_list){
   if(length(which(row.names(installed.packages()) == idx_package)) > 0){

@@ -4,7 +4,7 @@
 #clean skylineR/previous session
 rm(master_list)
 #load packages
-package_list <- c('svDialogs', 'plyr', 'tidyverse', 'plotly', 'statTarget', 'janitor', 'ropls', 'knitr', 'mzR', 'httr', 'matrixStats', 'openxlsx')
+package_list <- c('statTarget', 'svDialogs', 'ggpubr', 'janitor', 'plotly', 'knitr', 'viridisLite', 'mzR', 'httr', 'cowplot', 'matrixStats', 'tidyverse')
 
 for(idx_package in package_list){
   if(length(which(row.names(installed.packages()) == idx_package)) > 0){
@@ -189,7 +189,7 @@ for(idx_batch in master_list$project_details$mzml_plate_list){
     names_from = molecule_name,
     values_from = area
   ) %>%
-    rename(sample_name = file_name) 
+    dplyr::rename(sample_name = file_name) 
   
   #remove file extenstion (.mzML from sample_name)
   master_list$data$peakArea$transposed[[idx_batch]]$sample_name <- sub(".mzML", "", master_list$data$peakArea$transposed[[idx_batch]]$sample_name)
@@ -210,7 +210,7 @@ master_list$data$peakArea$sorted <- list()
 
 #run loop
 for (idx_batch in names(master_list$data$peakArea$transposed)){
-  master_list$project_details$run_orders[[idx_batch]] <- sub(".mzML", "", names(master_list$data$mzR[[idx_batch]])) %>% as_tibble() %>% rename(sample_name = value)
+  master_list$project_details$run_orders[[idx_batch]] <- sub(".mzML", "", names(master_list$data$mzR[[idx_batch]])) %>% as_tibble() %>% dplyr::rename(sample_name = value)
   temp_timestamp <- NULL
   for(idx_file in names(master_list$data$mzR[[idx_batch]])){
     temp_timestamp <- c(temp_timestamp, master_list$data$mzR[[idx_batch]][[idx_file]]$mzR_timestamp)
@@ -406,14 +406,14 @@ FUNC_list$PhenoFile <- list()
 # build PhenoFile file template
 FUNC_list$PhenoFile$template <- FUNC_list$master_data %>% 
   select(all_of("sample_name")) %>%
-  rename(sample = all_of("sample_name")) %>%
+  dplyr::rename(sample = all_of("sample_name")) %>%
   add_column(FUNC_list$master_data %>% 
                select(all_of("sample_name"))) %>%
   add_column(FUNC_list$master_data %>%
                select(all_of("sample_plate_id"))) %>%
   add_column(FUNC_list$master_data %>%
                select(all_of("sample_type"))) %>%
-  rename(class = all_of("sample_type")) %>% 
+  dplyr::rename(class = all_of("sample_type")) %>% 
   add_column(FUNC_list$master_data %>%
                select(all_of("sample_type"))) %>%
   add_column(FUNC_list$master_data %>%
@@ -480,7 +480,7 @@ FUNC_list$PhenoFile$template_qc_order$class[which(FUNC_list$PhenoFile$template_q
 
 #rename column header for statTarget template
 FUNC_list$PhenoFile$template_sample_id <- FUNC_list$PhenoFile$template_qc_order %>% 
-  rename(sample_id = all_of("sample_name"),
+  dplyr::rename(sample_id = all_of("sample_name"),
          batch = all_of("sample_plate_id"),
          order = all_of("sample_run_index")) %>%
   select(sample, batch, class, order, sample_id)
@@ -514,7 +514,7 @@ FUNC_list$ProfileFile <- list()
 FUNC_list$ProfileFile$template  <- FUNC_list$master_data %>%
   select(all_of("sample_name"),
          all_of(FUNC_list$metabolite_list)) %>%
-  rename(sample_id = !!"sample_name")
+  dplyr::rename(sample_id = !!"sample_name")
 
 #match run order to PhenoFile
 FUNC_list$ProfileFile$template_qc_order <- FUNC_list$PhenoFile$template_sample_id %>%
@@ -528,7 +528,7 @@ FUNC_list$ProfileFile$ProfileFile <- as_tibble(
         t(FUNC_list$ProfileFile$template_qc_order))
 ) %>%
   setNames(.[1,]) %>%
-  rename(name = sample) %>%
+  dplyr::rename(name = sample) %>%
   filter(name != "sample") %>%
   mutate(across(!contains("name", ignore.case = FALSE), as.numeric))
 
@@ -543,7 +543,7 @@ FUNC_list$ProfileFile$ProfileFile <- left_join(
   FUNC_list$ProfileFile$ProfileFile,
   by = "name") %>%
   select(-name) %>%
-  rename(name = metabolite_code)
+  dplyr::rename(name = metabolite_code)
 
 # write out as csv (requirement for statTarget::shiftCor)
 write_csv(x = FUNC_list$ProfileFile$ProfileFile, 
@@ -570,13 +570,13 @@ FUNC_list$corrected_data$data <- read_csv(
   paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results", "/statTarget/shiftCor/After_shiftCor/shift_all_cor.csv"),
   show_col_types = FALSE) %>%
   filter(sample != "class") %>%
-  rename(name = sample) %>%
+  dplyr::rename(name = sample) %>%
   mutate(across(!contains("name", ignore.case = FALSE), as.numeric))
 
 #recombine with sample filenames and lipid names
 FUNC_list$corrected_data$data_transposed <- right_join(
-  FUNC_list$ProfileFile$metabolite_list %>% rename(lipid = metabolite_code),
-  FUNC_list$corrected_data$data %>% rename(lipid = name),
+  FUNC_list$ProfileFile$metabolite_list %>% dplyr::rename(lipid = metabolite_code),
+  FUNC_list$corrected_data$data %>% dplyr::rename(lipid = name),
   by = "lipid"
 ) %>%
   select(-lipid) %>%
@@ -587,11 +587,11 @@ FUNC_list$corrected_data$data_transposed <- right_join(
   setNames(.[1,]) %>%
   filter(name!="name") %>%
   mutate(across(!contains("name", ignore.case = FALSE), as.numeric)) %>%
-  rename(sample = name) %>%
+  dplyr::rename(sample = name) %>%
   left_join(x = FUNC_list$PhenoFile$template_sample_id,
             y = .,
             by = "sample") %>%
-  rename(!!"sample_name" := sample_id) %>%
+  dplyr::rename(!!"sample_name" := sample_id) %>%
   left_join(
     x = FUNC_list$master_data %>%
       select(contains("sample")),
@@ -608,7 +608,7 @@ FUNC_list$corrected_data$qc_means <- FUNC_list$master_data %>%
   select(-contains("sample")) %>%
   colMeans() %>%
   as_tibble() %>%
-  rename(original_mean = value) %>%
+  dplyr::rename(original_mean = value) %>%
   add_column(metabolite = FUNC_list$master_data %>%
                select(-contains("sample")) %>%
                names(), 
@@ -1193,7 +1193,7 @@ master_list$filters$rsd <- rbind(master_list$filters$rsd,
 #tidy rsd table
 master_list$filters$rsd <- master_list$filters$rsd %>%
   as_tibble() %>%
-  rename(dataSource = V1,
+  dplyr::rename(dataSource = V1,
          dataBatch = V2) %>%
   mutate(across(!contains("data"), as.numeric)) %>%
   mutate(across(!contains("data"), round, 2))
@@ -1241,7 +1241,7 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
       c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) <10) %>% length())
     ) %>%
       as_tibble() %>%
-      rename(metric = V1,
+      dplyr::rename(metric = V1,
              !! paste0(idx_batch) := V2),
     by = "metric"
   )
@@ -1276,7 +1276,7 @@ master_list$summary_tables$projectOverview <- left_join(
     c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) <10) %>% length())
   ) %>%
     as_tibble() %>%
-    rename(metric = V1,
+    dplyr::rename(metric = V1,
            !! paste0("allBatches") := V2),
   by = "metric"
 )
@@ -1347,7 +1347,7 @@ for(idx_pca in c("peakArea", "concentration")){
   #extract scores data
   master_list$pca$scores[[idx_pca]] <- master_list$pca$models[[idx_pca]]@scoreMN %>% 
     as_tibble() %>%
-    rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
+    dplyr::rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
     add_column(.before = 1, sample_name = rownames(pca_x)) %>%
     left_join(by = "sample_name",
               .,
@@ -1378,7 +1378,7 @@ master_list$pca$models[["concentration.statTarget"]] <- ropls::opls(
 #extract scores data
 master_list$pca$scores[["concentration.statTarget"]] <- master_list$pca$models[["concentration.statTarget"]]@scoreMN %>% 
   as_tibble() %>%
-  rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
+  dplyr::rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
   add_column(.before = 1, sample_name = rownames(pca_x)) %>%
   left_join(by = "sample_name",
             .,
@@ -1413,7 +1413,7 @@ master_list$pca$models[["concentration.statTarget.filtered"]] <- ropls::opls(
 #extract scores data
 master_list$pca$scores[["concentration.statTarget.filtered"]] <- master_list$pca$models[["concentration.statTarget.filtered"]]@scoreMN %>% 
   as_tibble() %>%
-  rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
+  dplyr::rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
   add_column(.before = 1, sample_name = rownames(pca_x)) %>%
   left_join(by = "sample_name",
             .,
@@ -1552,13 +1552,13 @@ for(idx_metabolite in filter(master_list$templates$SIL_guide, control_chart == T
           mutate(sample_data_source=".peakArea"),
         #add SIL data
         bind_rows(master_list$data$peakArea$imputed) %>% select(contains("sample"), any_of(idx_sil)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>%
-          rename(!! paste0(idx_metabolite) := !!(paste0(idx_sil))) %>%
+          dplyr::rename(!! paste0(idx_metabolite) := !!(paste0(idx_sil))) %>%
           mutate(sample_data_source=".SIL.peakArea"),
         bind_rows(master_list$data$concentration$imputed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>%
           mutate(sample_data_source="concentration"),
         bind_rows(master_list$data$concentration$statTargetProcessed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>%
           mutate(sample_data_source="statTargetConcentration")
-      ) %>% rename(!!(paste0("value")) := !! paste0(idx_metabolite)),
+      ) %>% dplyr::rename(!!(paste0("value")) := !! paste0(idx_metabolite)),
       aes(x = sample_run_index, y = value,
           group = sample_name,
           fill = sample_type_factor,
