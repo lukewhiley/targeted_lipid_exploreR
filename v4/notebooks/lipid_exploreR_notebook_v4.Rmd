@@ -63,7 +63,19 @@ IMPORTANT INFORMATION PRIOR TO USING:
 
 
 ```{r lipidQC_exploreR, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
+#### load packages
+package_list <- c('svDialogs', 'plyr', 'tidyverse', 'ggpubr', 'janitor', 'shiny', 'plotly', 'statTarget', 'metabom8', 'knitr', 'viridisLite', 'mzR', 'httr', 'cowplot', 'matrixStats')
 
+for(idx_package in package_list){
+  if(length(which(row.names(installed.packages()) == idx_package)) > 0){
+  suppressMessages(require(package = idx_package,
+                                         character.only = TRUE))
+  } else {
+    dlg_message(
+    paste0(idx_package, " is not installed. Please install ", idx_package, " before continuing.")
+    )
+  }
+}
 
 qcCheckR_script <- GET(url = paste0("https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR/main/v4/scripts/SCRIPT_lipidExploreR_qcCheckeR_v4.R")) %>% 
   content(as = "text")
@@ -76,21 +88,4 @@ rm(list = c(ls()[which(ls() != "master_list")]))
 ```
 
 
-<!--
-Section 2 - control charteR
-Plots graphs for ISTD peak area, analogue analyte peak area, and response ratio for each injection.
-
-IMPORTANT INFORMATION PRIOR TO USING:
--> RUN skylineR chunk above BEFORE this qc script.
--> This chunk can be run using existing rda files created by skylineR
--> NOTE: The type of QC used MUST be tagged in the filename with matched case (LTR not ltr)
- 
--->
-
-```{r lipidQC_controlcharteR, eval = TRUE, echo = FALSE, warning=FALSE, error=FALSE, message=FALSE}
-controlCharteR_script <- GET(url = paste0("https://raw.githubusercontent.com/alanahstjames/Lipids-System-Suitability/master/control-chart-code-script_v0.1.R")) %>%
-  content(as = "text")
-
-eval(parse(text = controlCharteR_script), envir = .GlobalEnv)
-```
 
