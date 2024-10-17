@@ -565,13 +565,34 @@ statTarget::shiftCor(samPeno = samPeno,
                      coCV = 10000
 )
 
-#re-import data produced by statTarget and return it to format for LGW lipid pipeline
+#read back in csv
+
 FUNC_list$corrected_data$data <- read_csv(
   paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results", "/statTarget/shiftCor/After_shiftCor/shift_all_cor.csv"),
-  show_col_types = FALSE) %>%
-  filter(sample != "class") %>%
-  dplyr::rename(name = sample) %>%
-  mutate(across(!contains("name", ignore.case = FALSE), as.numeric))
+  show_col_types = FALSE)
+
+#different versions of r/statTarget appear to produce shift_all_cor in different orientations. Some have metabolites in columns some in rows. Unsure as to why, I did not find out which package inside statTarget was producing this outcome.
+#the next phase fixes this by performing a check as to the orientation of the csv
+
+#older packages (metab lites in rows)
+if("sample1" %in% colnames(FUNC_list$corrected_data$data)){
+  FUNC_list$corrected_data$data  <- FUNC_list$corrected_data$data  %>%
+    filter(sample != "class") %>%
+    dplyr::rename(name = sample) %>%
+    mutate(across(!contains("name", ignore.case = FALSE), as.numeric))
+}
+
+#updated packages (metabolites in columns)
+if("M1" %in% colnames(FUNC_list$corrected_data$data)){
+  FUNC_list$corrected_data$data  <- FUNC_list$corrected_data$data  %>%
+    t() %>% data.frame() %>%
+    rownames_to_column() %>% 
+    as_tibble() %>%
+    setNames(.[1,]) %>%
+    filter(sample != "class" & sample != "sample" ) %>%
+    dplyr::rename(name = sample) %>%
+    mutate(across(!contains("name", ignore.case = FALSE), as.numeric))
+}
 
 #recombine with sample filenames and lipid names
 FUNC_list$corrected_data$data_transposed <- right_join(
