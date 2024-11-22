@@ -628,7 +628,7 @@ FUNC_list$corrected_data$data_transposed <- right_join(
   select(-all_of(c("sample", "batch", "class", "order")))
 
 #### 1.5.c. post-statTarget peak area mean adjustment ------------------------------------
-#because the StatTarget correction changes the output signal area of the lipids, this next section re-scales the values based on the change (ratio) between pre and post corrected signal mean in the QCs
+#because the statTarget correction changes the output signal area of the lipids, this next section re-scales the values based on the change (ratio) between pre and post corrected signal mean in the QCs
 #step one - get mean value for each metabolite in the QC samples - pre-single drift corrected data 
 FUNC_list$corrected_data$qc_means <- FUNC_list$master_data %>%
   filter(!!as.symbol("sample_type") == "qc") %>%
@@ -1200,84 +1200,118 @@ master_list$filters$failed_lipids <- filter(master_list$filters$lipid.missingVal
 # features with a %RSD >30% are flagged for removal
 
 ### 2.4.a. peakArea ---------
-master_list$filters$rsd <- NULL
+master_list$filters$rsd <- tibble()
 
 #per batch/plate
 for(idx_batch in names(master_list$data$peakArea$imputed)){
   loopData <- master_list$data$peakArea$imputed[[idx_batch]] %>%
+    filter(!sample_name %in% master_list$filters$failed_samples) %>%
     filter(sample_type == "qc") %>%
     select(!contains("sample")) %>%
     select(!contains("SIL"))
   loopRSD <- (apply(X = loopData, MARGIN = 2, FUN = sd)/apply(X = loopData, MARGIN = 2, FUN = mean))*100
+  
   #export tibble
-  master_list$filters$rsd <- rbind(master_list$filters$rsd,
-                  c("peakArea",idx_batch, loopRSD))
+  master_list$filters$rsd <- bind_rows(
+    master_list$filters$rsd,
+    rbind(c("peakArea",idx_batch, loopRSD)) %>% 
+      as.tibble() %>%
+      mutate(across(names(loopRSD), as.numeric))
+  )
 }
 
 #per project
 loopData <- master_list$data$peakArea$imputed %>%
   bind_rows() %>%
+  filter(!sample_name %in% master_list$filters$failed_samples) %>%
   filter(sample_type == "qc") %>%
   select(!contains("sample")) %>%
   select(!contains("SIL"))
 loopRSD <- (apply(X = loopData, MARGIN = 2, FUN = sd)/apply(X = loopData, MARGIN = 2, FUN = mean))*100
+
 #export tibble
-master_list$filters$rsd <- rbind(master_list$filters$rsd,
-                c("peakArea","allBatches", loopRSD))
+master_list$filters$rsd <- bind_rows(
+  master_list$filters$rsd,
+  rbind(c("peakArea", "allBatches", loopRSD)) %>% 
+    as.tibble() %>%
+    mutate(across(names(loopRSD), as.numeric))
+)
 
 ### 2.4.b. concentration ---------
 #per batch/plate
 for(idx_batch in names(master_list$data$concentration$imputed)){
   loopData <- master_list$data$concentration$imputed[[idx_batch]] %>%
+    filter(!sample_name %in% master_list$filters$failed_samples) %>%
     filter(sample_type == "qc") %>%
     select(!contains("sample")) %>%
     select(!contains("SIL"))
   loopRSD <- (apply(X = loopData, MARGIN = 2, FUN = sd)/apply(X = loopData, MARGIN = 2, FUN = mean))*100
+  
   #export tibble
-  master_list$filters$rsd <- rbind(master_list$filters$rsd,
-                  c("concentration",idx_batch, loopRSD))
+  master_list$filters$rsd <- bind_rows(
+    master_list$filters$rsd,
+    rbind(c("concentration",idx_batch, loopRSD)) %>% 
+      as.tibble() %>%
+      mutate(across(names(loopRSD), as.numeric))
+  )
 }
 
 #per project
 loopData <- master_list$data$concentration$imputed %>%
   bind_rows() %>%
+  filter(!sample_name %in% master_list$filters$failed_samples) %>%
   filter(sample_type == "qc") %>%
   select(!contains("sample")) %>%
   select(!contains("SIL"))
 loopRSD <- (apply(X = loopData, MARGIN = 2, FUN = sd)/apply(X = loopData, MARGIN = 2, FUN = mean))*100
+
 #export tibble
-master_list$filters$rsd <- rbind(master_list$filters$rsd,
-                c("concentration","allBatches", loopRSD))
+master_list$filters$rsd <- bind_rows(
+  master_list$filters$rsd,
+  rbind(c("concentration","allBatches", loopRSD)) %>% 
+    as.tibble() %>%
+    mutate(across(names(loopRSD), as.numeric))
+)
 
 ### 2.4.c. statTarget concentration ---------
 #per batch/plate
 for(idx_batch in names(master_list$data$concentration$statTargetProcessed)){
   loopData <- master_list$data$concentration$statTargetProcessed[[idx_batch]] %>%
+    filter(!sample_name %in% master_list$filters$failed_samples) %>%
     filter(sample_type == "qc") %>%
     select(!contains("sample")) %>%
     select(!contains("SIL"))
   loopRSD <- (apply(X = loopData, MARGIN = 2, FUN = sd)/apply(X = loopData, MARGIN = 2, FUN = mean))*100
+  
   #export tibble
-  master_list$filters$rsd <- rbind(master_list$filters$rsd,
-                  c("concentration[StatTarget]",idx_batch, loopRSD))
+  master_list$filters$rsd <- bind_rows(
+    master_list$filters$rsd,
+    rbind(c("concentration[statTarget]",idx_batch, loopRSD)) %>% 
+      as.tibble() %>%
+      mutate(across(names(loopRSD), as.numeric))
+  )
 }
 
 #per project
 loopData <- master_list$data$concentration$statTargetProcessed %>%
   bind_rows() %>%
+  filter(!sample_name %in% master_list$filters$failed_samples) %>%
   filter(sample_type == "qc") %>%
   select(!contains("sample")) %>%
   select(!contains("SIL"))
 loopRSD <- (apply(X = loopData, MARGIN = 2, FUN = sd)/apply(X = loopData, MARGIN = 2, FUN = mean))*100
-#export tibble
-master_list$filters$rsd <- rbind(master_list$filters$rsd,
-                c("concentration[statTarget]","allBatches", loopRSD))
 
+#export tibble
+master_list$filters$rsd <- bind_rows(
+  master_list$filters$rsd,
+  rbind(c("concentration[statTarget]","allBatches", loopRSD)) %>% 
+    as.tibble() %>%
+    mutate(across(names(loopRSD), as.numeric))
+)
 #tidy rsd table
 master_list$filters$rsd <- master_list$filters$rsd %>%
-  as_tibble() %>%
   dplyr::rename(dataSource = V1,
-         dataBatch = V2) %>%
+                dataBatch = V2) %>%
   mutate(across(!contains("data"), as.numeric)) %>%
   mutate(across(!contains("data"), round, 2))
 
@@ -1319,9 +1353,9 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
       c("rsd<30%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <30) %>% length()),
       c("rsd<20%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data"))%>% select(!any_of(master_list$filters$failed_lipids))  <20) %>% length()),
       c("rsd<10%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <10) %>% length()),
-      c("rsd<30%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids))  <30) %>% length()),
-      c("rsd<20%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20) %>% length()),
-      c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data"))%>% select(!any_of(master_list$filters$failed_lipids))  <10) %>% length())
+      c("rsd<30%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[statTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids))  <30) %>% length()),
+      c("rsd<20%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[statTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20) %>% length()),
+      c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[statTarget]") %>% select(!contains("data"))%>% select(!any_of(master_list$filters$failed_lipids))  <10) %>% length())
     ) %>%
       as_tibble() %>%
       dplyr::rename(metric = V1,
