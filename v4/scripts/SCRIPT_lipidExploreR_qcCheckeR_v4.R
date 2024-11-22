@@ -47,7 +47,7 @@ if(dir.exists(paste0(skylineR_directory, "/", tempQCflag))){
 }
 
 #list .rda files
-rda_fileList <- list.files(skylineR_directory, pattern = "_skylineR_", recursive = TRUE)
+rda_fileList <- list.files(skylineR_directory, pattern = "_skylineR", recursive = TRUE)
 #ensure only .rda files are in filelist
 rda_fileList <- rda_fileList[grepl(".rda", rda_fileList, ignore.case = T)]
 
@@ -1591,7 +1591,7 @@ master_list$pca$scores[["concentration.statTarget.preProcessed"]]$sample_data_so
   ", l=",
   dim(pca_x)[2])
 
-### 4.2.b. create plotly scores by class ----------------------------
+### 4.2.b. create plotly scores ----------------------------
 #make plotly scores
 master_list$pca$plot <- list()
 for(idx_fill in c("sample_type_factor", "sample_plate_id")){
@@ -1797,10 +1797,11 @@ master_list$summary_tables$odsAreaOverview <- rbind(
 openxlsx::write.xlsx(
   file = paste0(master_list$project_details$project_dir, 
                 "/xlsx_report/",
-                Sys.Date(),
-                "_",
+                Sys.Date(), "_", master_list$project_details$user_name, "_",
                 master_list$project_details$project_name,
-                "_LGW_lipidData_qcCheckeR_v4.xlsx"),
+                "_",
+                master_list$project_details$mzml_plate_list,
+                "_lipidData_qcCheckeR_v4.xlsx"),
   overwrite = TRUE,
   x = list(
     "userGuide" = master_list$summary_tables$odsAreaOverview,
@@ -1843,13 +1844,19 @@ close(fileConn)
 rmarkdown::render(input = paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_template_v4.R"),
                   output_format = "html_document",
                   output_dir = paste0(master_list$project_details$project_dir, "/html_report"),
-                  output_file = paste0(Sys.Date(), "_", master_list$project_details$project_name, "_LGW_lipidExploreR_qcCheckeR_report_v4.html")
-)
+                  output_file = paste0(master_list$project_details$project_dir, 
+                                       "/html_report/",
+                                       Sys.Date(), "_", master_list$project_details$user_name, "_",
+                                       master_list$project_details$project_name,"_",master_list$project_details$mzml_plate_list,
+                                       "_lipidExploreR_qcCheckeR_report_v4.html")
+                  )
 
 ### 3. browse template ----
 browseURL(url = paste0(master_list$project_details$project_dir, 
                        "/html_report/",
-                       Sys.Date(), "_", master_list$project_details$project_name, "_LGW_lipidExploreR_qcCheckeR_report_v4.html")
+                       Sys.Date(), "_", master_list$project_details$user_name, "_",
+                       master_list$project_details$project_name,"_",master_list$project_details$mzml_plate_list,
+                       "_lipidExploreR_qcCheckeR_report_v4.html")
 )
 
 ## 5.3. rda file of maser list -------
@@ -1861,8 +1868,9 @@ rm(list = c(ls()[which(ls() != "master_list")]))
 save(master_list,
      file = paste0(
        master_list$project_details$project_dir,
-       "/data/rda/", Sys.Date(), 
-       "_LGW_qcCheckeR_v4_", 
-       master_list$project_details$project_name, 
-       ".rda"))
+       "/data/rda/", Sys.Date(), "_", master_list$project_details$user_name, "_",
+       master_list$project_details$project_name,
+       "_",
+       master_list$project_details$mzml_plate_list,
+       "_qcCheckeR_v4.rda"))
 

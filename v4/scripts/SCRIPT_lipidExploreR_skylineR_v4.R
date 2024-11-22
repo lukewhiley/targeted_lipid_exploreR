@@ -165,5 +165,8 @@ master_list$data$skyline_report <- read_csv(file = paste0(list.files(
 rm(list = c(ls()[which(ls() != "master_list")]))
 
 #export .rda
-save(master_list, file = paste0(master_list$project_details$project_dir, "/", master_list$project_details$plateID,"/data/rda/", Sys.Date(), "_skylineR_", master_list$project_details$project_name, ".rda"))
+save(master_list, file = paste0(
+  master_list$project_details$project_dir, "/", master_list$project_details$plateID,"/data/rda/", 
+  Sys.Date(), "_", master_list$project_details$user_name, "_", master_list$project_details$project_name, "_", master_list$project_details$plateID
+  "_skylineR.rda"))
 
