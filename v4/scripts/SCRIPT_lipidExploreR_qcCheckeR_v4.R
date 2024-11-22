@@ -1425,7 +1425,7 @@ master_list$project_details$plot_shape <- c("sample" = 21,
                                             "vltr" = 21,
                                             "pqc" = 21)
 #set preferred LTR type for subsequent QC filters
-master_list$project_details$plot_shape[which(tolower(master_list$project_details$qc_type) == tolower(names(master_list$project_details$plot_colour)))] <- 23
+master_list$project_details$plot_shape[which(tolower(master_list$project_details$qc_type) == tolower(names(master_list$project_details$plot_shape)))] <- 23
 #set plot size
 master_list$project_details$plot_size <- c("sample" = 2,
                                            "ltr" = 2,
@@ -1433,7 +1433,7 @@ master_list$project_details$plot_size <- c("sample" = 2,
                                            "vltr" = 2,
                                            "pqc" = 2)
 #set preferred LTR type for subsequent QC filters
-master_list$project_details$plot_size[which(tolower(master_list$project_details$qc_type) == tolower(names(master_list$project_details$plot_colour)))] <- 3
+master_list$project_details$plot_size[which(tolower(master_list$project_details$qc_type) == tolower(names(master_list$project_details$plot_size)))] <- 3
 
 ## 4.2. PCA  -----------
 ### 4.2.a. create models and extract scores ---------
