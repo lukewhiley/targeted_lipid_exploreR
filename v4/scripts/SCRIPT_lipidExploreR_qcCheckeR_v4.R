@@ -117,6 +117,7 @@ master_list <- masterListBatch; rm(masterListBatch)
 #set skyline directory if all plates
 if(tempQCflag == "all"){
 skylineR_directory <- paste0(skylineR_directory, "/", tempQCflag)
+master_list$project_details$plateID <- "all"
 }
 
 master_list$project_details$project_dir <- skylineR_directory
@@ -1800,7 +1801,7 @@ openxlsx::write.xlsx(
                 Sys.Date(), "_", master_list$project_details$user_name, "_",
                 master_list$project_details$project_name,
                 "_",
-                master_list$project_details$mzml_plate_list,
+                master_list$project_details$plateID,
                 "_lipidData_qcCheckeR_v4.xlsx"),
   overwrite = TRUE,
   x = list(
@@ -1847,7 +1848,7 @@ rmarkdown::render(input = paste0(master_list$project_details$project_dir, "/html
                   output_file = paste0(master_list$project_details$project_dir, 
                                        "/html_report/",
                                        Sys.Date(), "_", master_list$project_details$user_name, "_",
-                                       master_list$project_details$project_name,"_",master_list$project_details$mzml_plate_list,
+                                       master_list$project_details$project_name,"_",master_list$project_details$plateID,
                                        "_lipidExploreR_qcCheckeR_report_v4.html")
                   )
 
@@ -1855,7 +1856,7 @@ rmarkdown::render(input = paste0(master_list$project_details$project_dir, "/html
 browseURL(url = paste0(master_list$project_details$project_dir, 
                        "/html_report/",
                        Sys.Date(), "_", master_list$project_details$user_name, "_",
-                       master_list$project_details$project_name,"_",master_list$project_details$mzml_plate_list,
+                       master_list$project_details$project_name,"_",master_list$project_details$plateID,
                        "_lipidExploreR_qcCheckeR_report_v4.html")
 )
 
@@ -1871,6 +1872,6 @@ save(master_list,
        "/data/rda/", Sys.Date(), "_", master_list$project_details$user_name, "_",
        master_list$project_details$project_name,
        "_",
-       master_list$project_details$mzml_plate_list,
+       master_list$project_details$plateID,
        "_qcCheckeR_v4.rda"))
 
