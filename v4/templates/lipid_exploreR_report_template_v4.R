@@ -31,12 +31,12 @@ knitr::kable(master_list$summary_tables$projectOverview)
 #' 
 #' #### Plot: PCA scores colored by sampleType
 #'
-#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=9
+#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=12
 master_list$pca$plot$sample_type_factor
 #' 
 #' ### Plot: PCA scores colored by plateID
 #' 
-#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=9
+#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=12
 master_list$pca$plot$sample_plate_id
 #'
 #'
@@ -46,19 +46,19 @@ master_list$pca$plot$sample_plate_id
 #' 
 #' #### PC1
 #' 
-#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=9
+#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=12
 master_list$pca$scoresRunOrder$PC1
 #'
 #' ***
 #' #### PC2
 #' 
-#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=9
+#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=12
 master_list$pca$scoresRunOrder$PC2
 #'
 #' ***
 #' #### PC3
 #' 
-#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=9
+#+ echo=FALSE, message=FALSE, warning=FALSE,  fig.width=14, fig.height=12
 master_list$pca$scoresRunOrder$PC3
 #'
 #' ***

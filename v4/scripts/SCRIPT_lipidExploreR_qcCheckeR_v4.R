@@ -1312,15 +1312,15 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
       c("missingValueFilterFlags[samples]", master_list$filters$samples.missingValues %>% filter(sample_plate_id == idx_batch & sample.flag == 1) %>% nrow()),
       c("missingValueFilterFlags[SIL.IS]", which(as.matrix(master_list$filters$sil.intStd.missingValues %>% select(contains(idx_batch)) %>% select(contains("flag")))[,1] == 1) %>% length()),
       c("missingValueFilterFlags[lipidTargets]", which(as.matrix(master_list$filters$lipid.missingValues %>% select(contains(idx_batch)) %>% select(contains("flag")))[,1] == 1) %>% length()),
-      c("rsd<30%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "peakArea") %>% select(!contains("data")) <30) %>% length()),
-      c("rsd<20%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "peakArea") %>% select(!contains("data")) <20) %>% length()),
-      c("rsd<10%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "peakArea") %>% select(!contains("data")) <10) %>% length()),
-      c("rsd<30%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) <30) %>% length()),
-      c("rsd<20%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) <20) %>% length()),
-      c("rsd<10%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) <10) %>% length()),
-      c("rsd<30%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) <30) %>% length()),
-      c("rsd<20%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) <20) %>% length()),
-      c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) <10) %>% length())
+      c("rsd<30%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "peakArea") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <30) %>% length()),
+      c("rsd<20%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "peakArea") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20) %>% length()),
+      c("rsd<10%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "peakArea") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <10) %>% length()),
+      c("rsd<30%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <30) %>% length()),
+      c("rsd<20%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data"))%>% select(!any_of(master_list$filters$failed_lipids))  <20) %>% length()),
+      c("rsd<10%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <10) %>% length()),
+      c("rsd<30%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids))  <30) %>% length()),
+      c("rsd<20%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20) %>% length()),
+      c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == idx_batch & dataSource == "concentration[StatTarget]") %>% select(!contains("data"))%>% select(!any_of(master_list$filters$failed_lipids))  <10) %>% length())
     ) %>%
       as_tibble() %>%
       dplyr::rename(metric = V1,
@@ -1332,7 +1332,6 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
 }
   
  ## 3.2. interPlate ----
-
 master_list$summary_tables$projectOverview <- left_join(
   master_list$summary_tables$projectOverview,
   rbind(
@@ -1347,15 +1346,15 @@ master_list$summary_tables$projectOverview <- left_join(
     c("missingValueFilterFlags[samples]", master_list$filters$samples.missingValues %>% filter(sample.flag == 1) %>% nrow()),
     c("missingValueFilterFlags[SIL.IS]", which(as.matrix(master_list$filters$sil.intStd.missingValues %>% select(contains("PROJECT.flag")))[,1] == 1) %>% length()),
     c("missingValueFilterFlags[lipidTargets]", which(as.matrix(master_list$filters$lipid.missingValues %>% select(contains("PROJECT.flag")))[,1] == 1) %>% length()),
-    c("rsd<30%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "peakArea") %>% select(!contains("data")) <30) %>% length()),
-    c("rsd<20%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "peakArea") %>% select(!contains("data")) <20) %>% length()),
-    c("rsd<10%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "peakArea") %>% select(!contains("data")) <10) %>% length()),
-    c("rsd<30%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration") %>% select(!contains("data")) <30) %>% length()),
-    c("rsd<20%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration") %>% select(!contains("data")) <20) %>% length()),
-    c("rsd<10%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration") %>% select(!contains("data")) <10) %>% length()),
-    c("rsd<30%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) <30) %>% length()),
-    c("rsd<20%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) <20) %>% length()),
-    c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) <10) %>% length())
+    c("rsd<30%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "peakArea") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <30) %>% length()),
+    c("rsd<20%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "peakArea") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20) %>% length()),
+    c("rsd<10%[peakArea]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "peakArea") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <10) %>% length()),
+    c("rsd<30%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <30) %>% length()),
+    c("rsd<20%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20) %>% length()),
+    c("rsd<10%[concentration]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <10) %>% length()),
+    c("rsd<30%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <30) %>% length()),
+    c("rsd<20%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <20)  %>% length()),
+    c("rsd<10%[concentration.statTarget]", which(master_list$filters$rsd %>% filter(dataBatch == "allBatches" & dataSource == "concentration[statTarget]") %>% select(!contains("data")) %>% select(!any_of(master_list$filters$failed_lipids)) <10) %>% length())
   ) %>%
     as_tibble() %>%
     dplyr::rename(metric = V1,
@@ -1436,6 +1435,14 @@ for(idx_pca in c("peakArea", "concentration")){
               bind_rows(master_list$data[[idx_pca]]$imputed) %>%
                 select(contains("sample"))
     )
+  
+  master_list$pca$scores[[idx_pca]]$sample_data_source <- paste0(unique(master_list$pca$scores[[idx_pca]]$sample_data_source),
+                                                                 ": s=",
+                                                                 dim(pca_x)[1],
+                                                                 ", l=",
+                                                                 dim(pca_x)[2]
+  )
+  
 }
 
 #statTarget model
@@ -1468,7 +1475,80 @@ master_list$pca$scores[["concentration.statTarget"]] <- master_list$pca$models[[
               select(contains("sample"))
   )
 
-#statTarget processed and filtered model
+
+master_list$pca$scores$concentration.statTarget$sample_data_source <- paste0(
+  "concentration.statTarget",
+  ": s=",
+  dim(pca_x)[1],
+  ", l=",
+  dim(pca_x)[2]
+)
+
+
+#processed and filtered models
+for(idx_pca in c("peakArea", "concentration")){
+  loopLipidFilter <- c(
+    master_list$filters$failed_lipids,
+    master_list$filters$rsd %>% 
+      filter(dataBatch == "allBatches" & dataSource == idx_pca) %>%
+      select(-dataBatch) %>%
+      t() %>%
+      as.data.frame() %>%
+      rownames_to_column() %>%
+      setNames(c("lipid", "value")) %>%
+      .[-1,] %>%
+      as_tibble() %>% 
+      mutate_at("value", as.numeric) %>%
+      filter(value >30) %>%
+      .$lipid
+  ) %>% 
+    unique()
+  
+  pca_x <- bind_rows(master_list$data[[idx_pca]]$imputed) %>%
+    filter(!sample_name %in% master_list$filters$failed_samples) %>%
+    column_to_rownames("sample_name") %>%
+    select(-contains("sample"), -contains("SIL"), 
+           -any_of(loopLipidFilter)) %>%
+    as.matrix()
+  
+  #build PCA
+  master_list$pca$models[[paste0(idx_pca, ".preProcessed")]] <- ropls::opls(
+    x = pca_x,
+    y=NULL,
+    crossvalI = 1,
+    predI = 3,
+    algoC = "nipals",
+    log10L = TRUE,
+    scale = "pareto",
+    plotSubC = NA, 
+    fig.pdfC = "none",
+    subset = NULL)
+  
+  #extract scores data
+  master_list$pca$scores[[paste0(idx_pca, ".preProcessed")]] <- master_list$pca$models[[paste0(idx_pca, ".preProcessed")]]@scoreMN %>% 
+    as_tibble() %>%
+    dplyr::rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
+    add_column(.before = 1, sample_name = rownames(pca_x)) %>%
+    left_join(by = "sample_name",
+              .,
+              bind_rows(master_list$data[[idx_pca]]$imputed) %>%
+                select(contains("sample"))
+    )
+  
+  master_list$pca$scores[[paste0(idx_pca, ".preProcessed")]]$sample_data_source <- paste0(
+    gsub(":.*", "", unique(master_list$pca$scores[[idx_pca]]$sample_data_source)), 
+    ".preProcessed: ",
+    "s=",
+    dim(pca_x)[1],
+    ", l=",
+    dim(pca_x)[2])
+  
+  # if(idx_pca =="peakArea"){
+  #   master_list$pca$scores[[paste0(idx_pca, ".preProcessed")]]$sample_data_source <- paste0(".", master_list$pca$scores[[paste0(idx_pca, ".preProcessed")]]$sample_data_source)
+  # }
+}
+
+#statTarget
 pca_x <- bind_rows(master_list$data$concentration$statTargetProcessed) %>%
   filter(!sample_name %in% master_list$filters$failed_samples) %>%
   select(!any_of(master_list$filters$failed_lipids)) %>%
@@ -1480,7 +1560,7 @@ pca_x <- bind_rows(master_list$data$concentration$statTargetProcessed) %>%
   as.matrix()
 
 #build PCA
-master_list$pca$models[["concentration.statTarget.filtered"]] <- ropls::opls(
+master_list$pca$models[["concentration.statTarget.preProcessed"]] <- ropls::opls(
   x = pca_x,
   y=NULL,
   crossvalI = 1,
@@ -1493,7 +1573,7 @@ master_list$pca$models[["concentration.statTarget.filtered"]] <- ropls::opls(
   subset = NULL)
 
 #extract scores data
-master_list$pca$scores[["concentration.statTarget.filtered"]] <- master_list$pca$models[["concentration.statTarget.filtered"]]@scoreMN %>% 
+master_list$pca$scores[["concentration.statTarget.preProcessed"]] <- master_list$pca$models[["concentration.statTarget.preProcessed"]]@scoreMN %>% 
   as_tibble() %>%
   dplyr::rename(PC1 = p1, PC2 = p2, PC3 = p3) %>%
   add_column(.before = 1, sample_name = rownames(pca_x)) %>%
@@ -1503,8 +1583,13 @@ master_list$pca$scores[["concentration.statTarget.filtered"]] <- master_list$pca
               select(contains("sample"))
   )
 
-master_list$pca$scores[["concentration.statTarget.filtered"]]$sample_data_source <- "concentration.statTargetProcessed.filtered"
-
+master_list$pca$scores[["concentration.statTarget.preProcessed"]]$sample_data_source <- paste0(
+  gsub(":.*","",unique(master_list$pca$scores$concentration.statTarget$sample_data_source)), 
+  ".preProcessed: ",
+  "s=",
+  dim(pca_x)[1],
+  ", l=",
+  dim(pca_x)[2])
 
 ### 4.2.b. create plotly scores by class ----------------------------
 #make plotly scores
@@ -1529,7 +1614,7 @@ for(idx_fill in c("sample_type_factor", "sample_plate_id")){
       scale_color_manual(values = master_list$project_details$plot_colour) +
       scale_size_manual(values = master_list$project_details$plot_size) +
       guides(shape = "none", size = "none", color = "none", fill=guide_legend(title=paste0(idx_fill))) +
-      facet_wrap(facets = "sample_data_source", scales = "free", ncol = 2, nrow = 2)
+      facet_wrap(facets = "sample_data_source", scales = "free", ncol = 2, nrow = 3)
   ) %>% layout(
     title = list(
       text = paste0("PCA scores; coloured by ", idx_fill, "; ", master_list$project_details$project_name),
@@ -1630,15 +1715,15 @@ for(idx_metabolite in filter(master_list$templates$SIL_guide, control_chart == T
   master_list$control_charts[[idx_metabolite]] <- ggplotly(
     ggplot(
       data = bind_rows(
-        bind_rows(master_list$data$peakArea$imputed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>% 
+        bind_rows(master_list$data$peakArea$imputed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% #filter(!sample_name %in% master_list$filters$failed_samples) %>% 
           mutate(sample_data_source=".peakArea"),
         #add SIL data
-        bind_rows(master_list$data$peakArea$imputed) %>% select(contains("sample"), any_of(idx_sil)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>%
+        bind_rows(master_list$data$peakArea$imputed) %>% select(contains("sample"), any_of(idx_sil)) %>% #filter(!sample_name %in% master_list$filters$failed_samples) %>%
           dplyr::rename(!! paste0(idx_metabolite) := !!(paste0(idx_sil))) %>%
           mutate(sample_data_source=".SIL.peakArea"),
-        bind_rows(master_list$data$concentration$imputed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>%
+        bind_rows(master_list$data$concentration$imputed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% #filter(!sample_name %in% master_list$filters$failed_samples) %>%
           mutate(sample_data_source="concentration"),
-        bind_rows(master_list$data$concentration$statTargetProcessed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% filter(!sample_name %in% master_list$filters$failed_samples) %>%
+        bind_rows(master_list$data$concentration$statTargetProcessed) %>% select(contains("sample"), any_of(idx_metabolite)) %>% #filter(!sample_name %in% master_list$filters$failed_samples) %>%
           mutate(sample_data_source="statTargetConcentration")
       ) %>% dplyr::rename(!!(paste0("value")) := !! paste0(idx_metabolite)),
       aes(x = sample_run_index, y = value,
