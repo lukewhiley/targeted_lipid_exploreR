@@ -81,13 +81,11 @@ dlg_message("NOTE - IT IS NO LONGER NECESSARY TO PUT MZML IN SUBFOLDERS PER PLAT
 
 
 #archive no longer necessary - now process per plate
-
 # master_list$project_details$mzml_plate_list <- list.dirs(paste0(master_list$project_details$project_dir, "/",
 #                                                                 master_list$project_details$plateID,
 #                                                                 "/data/mzml"),
 #                                                          recursive = FALSE,
 #                                                          full.names = FALSE)
-# 
 # dlg_message(paste0("there are ", length(master_list$project_details$mzml_plate_list), " plates of samples"), type = 'ok')
 
 # PROCESS: IMPORT mzML FILES USING mzR ------------------------------------
