@@ -167,6 +167,6 @@ rm(list = c(ls()[which(ls() != "master_list")]))
 #export .rda
 save(master_list, file = paste0(
   master_list$project_details$project_dir, "/", master_list$project_details$plateID,"/data/rda/", 
-  Sys.Date(), "_", master_list$project_details$user_name, "_", master_list$project_details$project_name, "_", master_list$project_details$plateID
+  Sys.Date(), "_", master_list$project_details$user_name, "_", master_list$project_details$project_name, "_", master_list$project_details$plateID,
   "_skylineR.rda"))
 
