@@ -159,7 +159,7 @@ master_list$data$skyline_report <- read_csv(file = paste0(list.files(
   paste0(master_list$project_details$project_dir,  "/", master_list$project_details$plateID,  "/data/skyline"),
   pattern = "xskylineR", full.names = TRUE)), show_col_types = FALSE) %>% mutate_at(
     vars("Precursor Mz", "Product Mz", "Retention Time", "Start Time", "End Time", "Area", "Height"), 
-    as.numeric) %>% clean_names()
+    as.numeric) %>% clean_names() 
 
 #clean environment
 rm(list = c(ls()[which(ls() != "master_list")]))

@@ -71,11 +71,13 @@ if(length(rda_fileList)>0){
 master_list$project_details$user_name <- dlgInput("set user", master_list$project_details$user_name)$res
 #set project name
 master_list$project_details$project_name <- dlgInput("project", master_list$project_details$project_name)$res
-#set qc-type
+#set is version
 master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = pre-2023, v2 = post-2023)", master_list$project_details$is_ver)$res
 #reset parent directory
 master_list$summary_tables$project_summary$value[which(master_list$summary_tables$project_summary$`Project detail` == "local directory")] <- skylineR_directory
 master_list$project_details$project_dir <- skylineR_directory
+#set github directory to v4
+master_list$project_details$github_master_dir <- "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR/refs/heads/main/v4/"
 
 #reassign master_list[1] and remove original master_list object
 masterListBatch <- master_list; rm(master_list)
@@ -135,11 +137,13 @@ master_list$templates <- list()
 #if using sciex lipidizer internal standards
 if(master_list$project_details$is_ver == "v1"){
   master_list$templates$SIL_guide <- read_csv(
-    file = "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR_v3/main/templates/LGW_lipid_mrm_template_v1.csv",
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_lipid_mrm_template_v1.csv"),
     show_col_types = FALSE) %>%
     clean_names()
   master_list$templates$conc_guide <- read_csv(
-    file = "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR_v3/main/templates/LGW_SIL_batch_103.csv", 
+    file = paste0(master_list$project_details$github_master_dir,
+                  "templates/LGW_SIL_batch_103.csv"), 
     show_col_types = FALSE) %>% 
     clean_names()
 }
@@ -147,11 +151,13 @@ if(master_list$project_details$is_ver == "v1"){
 #if using ultra splash mix (ANPC method v2)
 if(master_list$project_details$is_ver == "v2"){
   master_list$templates$SIL_guide <- read_csv(
-    file = "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR_v3/main/templates/LGW_lipid_mrm_template_v2.csv",
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_lipid_mrm_template_v2.csv"),
     show_col_types = FALSE) %>%
     clean_names()
   master_list$templates$conc_guide <- read_csv(
-    file = "https://raw.githubusercontent.com/lukewhiley/targeted_lipid_exploreR_v3/main/templates/LGW_SIL_batch_Ultimate_2023-03-06.csv", 
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_SIL_batch_Ultimate_2023-03-06.csv"), 
     show_col_types = FALSE) %>% 
     clean_names()
 }
@@ -1870,7 +1876,7 @@ openxlsx::write.xlsx(
 
 ### 5.2.a. download template ----
 fileConn<-file(paste0(master_list$project_details$project_dir, "/html_report/lipid_exploreR_report_template_v4.R"))
-writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "/templates/lipid_exploreR_report_template_v4.R")) %>%
+writeLines(httr::GET(url = paste0(master_list$project_details$github_master_dir, "templates/lipid_exploreR_report_template_v4.R")) %>%
              httr::content(as = "text"), fileConn)
 close(fileConn)
 
