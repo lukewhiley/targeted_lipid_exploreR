@@ -10,12 +10,12 @@ master_list$environment$base_packages <- sessionInfo()$basePkgs
 master_list$environment$user_packages <- paste0(names(sessionInfo()$otherPkgs), ": ", paste0(installed.packages()[names(sessionInfo()$otherPkgs), "Version"]))
 
 ##USER INPUT##
+#set user
+master_list$project_details$user_name <- dlgInput("user", "example_initials")$res
 #create project folder structure
 dlg_message("select project directory.", type = 'ok');master_list$project_details$project_dir <- rstudioapi::selectDirectory()
 #set lipidExploreR version
 master_list$project_details$lipidExploreR_version <- "4"
-#set user
-master_list$project_details$user_name <- dlgInput("user", "example_initials")$res
 #set project name
 master_list$project_details$project_name <- dlgInput("project", basename(paste0(master_list$project_details$project_dir)))$res
 #set plateID

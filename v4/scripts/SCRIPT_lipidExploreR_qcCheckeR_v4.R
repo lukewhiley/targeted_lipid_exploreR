@@ -342,24 +342,6 @@ for(idx_batch in names(master_list$data$peakArea$sorted)){
 
 ## 1.5. statTarget signalDrift | batch correction ----------------------------
 
-#set qc-type
-master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget", "VLTR/LTR/PQC - default is VLTR")$res
-
-#flag low number of QCs using ratio of QC to total samples
-for(idxPlate in names(master_list$data$peakArea$imputed)){
-  
-  totalSamples <- length(master_list$data$peakArea$imputed[[idxPlate]]$sample_type_factor)
-  requiredQCs <- (6/96) # Minimum of 6 QC for 96 samples
-  qcCount <- length(which(tolower(master_list$data$peakArea$imputed[[idxPlate]]$sample_type_factor) == tolower(master_list$project_details$statTarget_qc_type)))
-  qcCountRatio <- (qcCount/totalSamples)
-  dlg_message(paste0(idxPlate, " has ", qcCount, " ", master_list$project_details$statTarget_qc_type, "s for use by statTarget"), "ok")
-  
-  if(qcCountRatio < requiredQCs || qcCount < 2){
-    dlg_message(paste0("You do not have enough QCs for statTarget on plate ",idxPlate,". Stopping qcCheckeR. Please remove plate ",idxPlate," and re-run chunk."), type = 'ok')
-    FUNC_list$corrected_data$data <- NULL
-  }
-}
-
 #create batch correction directory
 #data
 if(!dir.exists(paste0(skylineR_directory, "/data"))){
@@ -386,13 +368,6 @@ if(!dir.exists(paste0(skylineR_directory, "/html_report"))){
   dir.create(paste0(skylineR_directory, "/html_report"))
 }
 
-
-
-#create data list 
-FUNC_list <- list()
-FUNC_list$project_dir <- paste0(skylineR_directory,
-                                "/data/batch_correction")
-
 #create directories 
 if(!dir.exists(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results"))){
   dir.create(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results"))
@@ -400,12 +375,54 @@ if(!dir.exists(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correctio
 
 setwd(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results")) 
 
+#set qc-type
+master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget", "VLTR/LTR/PQC - default is VLTR")$res
+
+
+#create data list 
+FUNC_list <- list()
+FUNC_list$project_dir <- paste0(skylineR_directory,
+                                "/data/batch_correction")
 #apply on peakArea data (post-impute)
 #set master data for function
 FUNC_list$master_data <- bind_rows(master_list$data$peakArea$imputed)
 #set_qc type used for signal drift correction
 FUNC_list$master_data[["sample_type"]] <- "sample"
 FUNC_list$master_data[["sample_type"]][which(tolower(FUNC_list$master_data[["sample_type_factor"]]) == tolower(master_list$project_details$statTarget_qc_type))] <- "qc"
+
+#flag QCs that have failed because of mis-injection (very low signal (<10 % of median))
+temp.rowSums <- FUNC_list$master_data %>%
+  filter(sample_type_factor == "vltr") %>%
+  select(!contains("sample")) %>%
+  rowSums()
+#find file names
+temp.qcFail <- (FUNC_list$master_data  %>%
+                  filter(sample_type_factor == "vltr") %>%
+                  .$sample_name)[which(temp.rowSums < median(temp.rowSums*0.1))]
+
+#reset failed QC injections to "sample" so is not included in statTarget algorithm
+FUNC_list$master_data[["sample_type"]][which(FUNC_list$master_data[["sample_name"]] %in% temp.qcFail)] <- "sample"
+
+
+#flag low number of QCs using ratio of QC to total samples
+for(idxPlate in names(master_list$data$peakArea$imputed)){
+  
+  plateData <- FUNC_list$master_data %>% filter(sample_plate_id == idxPlate)
+  totalSamples <- length(plateData %>% .$sample_type_factor)
+  requiredQCs <- (6/96) # Minimum of 6 QC for 96 samples
+  qcCount <- length(which(tolower(plateData$sample_type) == "qc"))
+  qcCountRatio <- (qcCount/totalSamples)
+  dlg_message(paste0(idxPlate, " has ", qcCount, " ", master_list$project_details$statTarget_qc_type, "s for use by statTarget"), "ok")
+  
+  if(qcCountRatio < requiredQCs || qcCount < 2){
+    dlg_message(paste0("You do not have enough QCs for statTarget on plate ",idxPlate,". Stopping qcCheckeR. Please remove plate ",idxPlate," and re-run chunk."), type = 'ok')
+    FUNC_list$corrected_data$data <- NULL
+  }
+}
+
+
+#exclude failed qcs (see chunk above to id failed QCs)
+FUNC_list$master_data[["sample_type"]]
 
 #set metabolite list
 FUNC_list$metabolite_list <- master_list$data$peakArea$imputed %>%
