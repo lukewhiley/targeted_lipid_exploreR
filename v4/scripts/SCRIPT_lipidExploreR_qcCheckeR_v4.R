@@ -124,7 +124,6 @@ master_list$project_details$plateID <- "all"
 
 master_list$project_details$project_dir <- skylineR_directory
 
-
 #set version of lipidExploreR used
 master_list$project_details$lipidExploreR_version <- "4.0"
 master_list$project_details$qcCheckR_version <- "4.0"
@@ -368,13 +367,6 @@ if(!dir.exists(paste0(skylineR_directory, "/html_report"))){
   dir.create(paste0(skylineR_directory, "/html_report"))
 }
 
-#create directories 
-if(!dir.exists(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results"))){
-  dir.create(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results"))
-}
-
-setwd(paste0(FUNC_list$project_dir, "/", Sys.Date(), "_signal_correction_results")) 
-
 #set qc-type
 master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will be used for statTarget", "VLTR/LTR/PQC - default is VLTR")$res
 
@@ -383,6 +375,15 @@ master_list$project_details$statTarget_qc_type <- dlgInput("which qc type will b
 FUNC_list <- list()
 FUNC_list$project_dir <- paste0(skylineR_directory,
                                 "/data/batch_correction")
+
+#set up project folders for batch correct
+#create directories 
+if(!dir.exists(paste0(FUNC_list$project_dir,"/", Sys.Date(), "_signal_correction_results"))){
+  dir.create(paste0(FUNC_list$project_dir,"/", Sys.Date(), "_signal_correction_results"))
+}
+
+setwd(paste0(FUNC_list$project_dir,"/", Sys.Date(), "_signal_correction_results")) 
+
 #apply on peakArea data (post-impute)
 #set master data for function
 FUNC_list$master_data <- bind_rows(master_list$data$peakArea$imputed)
