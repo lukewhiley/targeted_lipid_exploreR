@@ -1845,9 +1845,10 @@ master_list$summary_tables$odsAreaOverview <- rbind(
   c("QC.lipidQcRsd", "detailed overview of lipid quality (% RSD in QC samples)"),
   c("DATA.lipidPeakArea", "lipid target peak area integrals (skylineMS)"),
   c("DATA.silPeakArea", "stable isotope labelled internal standard peak area integrals (skylineMS)"),
-  c("DATA.allConcentration", "peakArea >> ratio with SIL IS >> single point concentration factor adjusted"),
-  c("DATA.concentration.preProcessed", "peakArea >> ratio with SIL IS >> single point concentration factor adjusted >> imputed[min/2] >> filtered"),
-  c("DATA.statTarget.preProcessed", "peakArea >> ratio with SIL IS >> single point concentration factor adjusted >> imputed[min/2] >> filtered >> signalDrift|batch correction using the statTarget r package")
+  c("DATA.all.concentration", "peakArea >> missing value imputed [min/2] >> ratio with SIL IS >> single point concentration factor adjusted"),
+  c("DATA.all.statTarget", "peakArea >> missing value imputed [min/2] >> signalDrift|batch correction using the statTarget r package >> ratio with SIL IS >> single point concentration factor adjusted"),
+  c("DATA.preProcessed.concentration", "peakArea >> ratio with SIL IS >> single point concentration factor adjusted >> imputed[min/2] >> filtered"),
+  c("DATA.preProcessed.statTarget", "peakArea >> signalDrift|batch correction using the statTarget r package >> ratio with SIL IS >> single point concentration factor adjusted >> imputed[min/2] >> filtered")
 ) %>%
   as_tibble() 
 
@@ -1875,13 +1876,14 @@ openxlsx::write.xlsx(
     "DATA.peakArea" = bind_rows(master_list$data$peakArea$sorted) %>% select(-contains("SIL")),
     "DATA.silPeakArea" = bind_rows(master_list$data$peakArea$sorted) %>% select(contains("sample") | contains("SIL")),
     "DATA.all.concentration" = bind_rows(master_list$data$concentration$sorted),
-    "DATA.concentration.preProcessed" = bind_rows(master_list$data$concentration$imputed) %>% 
+    "DATA.all.statTarget" = bind_rows(master_list$data$concentration$statTargetProcessed),
+    "DATA.preProcessed.concentration" = bind_rows(master_list$data$concentration$imputed) %>% 
       filter(!sample_name %in% master_list$filters$failed_samples) %>%
       select(!any_of(master_list$filters$failed_lipids)) %>%
       select(!any_of(
         (master_list$filters$rsd %>% filter(dataSource == "concentration" & dataBatch == "allBatches") %>% select(!contains("data")))[which(master_list$filters$rsd %>% filter(dataSource == "concentration" & dataBatch == "allBatches") %>% select(!contains("data"))>30)] %>% names()
       )),
-    "DATA.statTarget.preProcessed" = bind_rows(master_list$data$concentration$statTargetProcessed) %>%
+    "DATA.preProcessed.statTarget" = bind_rows(master_list$data$concentration$statTargetProcessed) %>%
       filter(!sample_name %in% master_list$filters$failed_samples) %>%
       select(!any_of(master_list$filters$failed_lipids)) %>%
       select(!any_of(
