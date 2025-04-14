@@ -23,7 +23,7 @@ master_list$project_details$plateID <- dlgInput("plate", "p0xy")$res
 #set qc-type
 master_list$project_details$qc_type <- dlgInput("qc type used - tag MUST be in filename of mzML files (matched case)", "LTR/SR/PQC")$res
 #set qc-type
-master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = pre-2023, v2 = post-2023)", "v1/v2")$res
+master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = 6500,pre-2023, v2 = 6500, post-2023, v3 = 7500 (matched to v2), v4 = 7500 updated, 2025)", master_list$project_details$is_ver)$res
 #create summary table for report
 master_list$summary_tables$project_summary <- tibble(unlist(master_list$project_details)) %>%
   add_column("Project detail" = c(
@@ -66,6 +66,21 @@ if(master_list$project_details$is_ver == "v2"){
   master_list$templates$mrm_guides$mrm_guide <- read_csv(
     paste0(master_list$project_details$github_master_dir,
            "/templates/LGW_lipid_mrm_template_v2.csv"),
+    show_col_types = FALSE) 
+}
+
+if(master_list$project_details$is_ver == "v3"){
+  master_list$templates$mrm_guides$mrm_guide <- read_csv(
+    paste0(master_list$project_details$github_master_dir,
+           "/templates/LGW_lipid_mrm_template_v3.csv"),
+    show_col_types = FALSE) 
+}
+
+
+if(master_list$project_details$is_ver == "v4"){
+  master_list$templates$mrm_guides$mrm_guide <- read_csv(
+    paste0(master_list$project_details$github_master_dir,
+           "/templates/LGW_lipid_mrm_template_v4.csv"),
     show_col_types = FALSE) 
 }
 

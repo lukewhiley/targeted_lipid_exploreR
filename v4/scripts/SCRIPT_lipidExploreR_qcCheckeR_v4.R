@@ -72,7 +72,7 @@ master_list$project_details$user_name <- dlgInput("set user", master_list$projec
 #set project name
 master_list$project_details$project_name <- dlgInput("project", master_list$project_details$project_name)$res
 #set is version
-master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = pre-2023, v2 = post-2023)", master_list$project_details$is_ver)$res
+master_list$project_details$is_ver <- dlgInput("SIL internal standard version used (v1 = 6500,pre-2023, v2 = 6500, post-2023, v3 = 7500 (matched to v2), v4 = 7500 updated, 2025)", master_list$project_details$is_ver)$res
 #reset parent directory
 master_list$summary_tables$project_summary$value[which(master_list$summary_tables$project_summary$`Project detail` == "local directory")] <- skylineR_directory
 master_list$project_details$project_dir <- skylineR_directory
@@ -152,6 +152,35 @@ if(master_list$project_details$is_ver == "v2"){
   master_list$templates$SIL_guide <- read_csv(
     file = paste0(master_list$project_details$github_master_dir, 
                   "templates/LGW_lipid_mrm_template_v2.csv"),
+    show_col_types = FALSE) %>%
+    clean_names()
+  master_list$templates$conc_guide <- read_csv(
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_SIL_batch_Ultimate_2023-03-06.csv"), 
+    show_col_types = FALSE) %>% 
+    clean_names()
+}
+
+
+#if using ultra splash mix (ANPC method v4)
+if(master_list$project_details$is_ver == "v3"){
+  master_list$templates$SIL_guide <- read_csv(
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_lipid_mrm_template_v3.csv"),
+    show_col_types = FALSE) %>%
+    clean_names()
+  master_list$templates$conc_guide <- read_csv(
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_SIL_batch_Ultimate_2023-03-06.csv"), 
+    show_col_types = FALSE) %>% 
+    clean_names()
+}
+
+#if using ultra splash mix (ANPC method v4)
+if(master_list$project_details$is_ver == "v4"){
+  master_list$templates$SIL_guide <- read_csv(
+    file = paste0(master_list$project_details$github_master_dir, 
+                  "templates/LGW_lipid_mrm_template_v4.csv"),
     show_col_types = FALSE) %>%
     clean_names()
   master_list$templates$conc_guide <- read_csv(
