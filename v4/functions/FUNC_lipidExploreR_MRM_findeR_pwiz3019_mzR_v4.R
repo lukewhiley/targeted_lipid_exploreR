@@ -98,13 +98,13 @@ mzR_mrm_findR <- function(FUNC_mzR, #list from master_list containing $mzR objec
           
           #find retention times according to scan indices
           #1. find rt of peak_apex
-          mzml_rt_apex <- FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$time[peak_apex_idx] %>% round(2)
+          mzml_rt_apex <- FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$rtime[peak_apex_idx] %>% round(2)
           
           #2. find rt of peak start time
-          mzml_rt_start <- FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$time[peak_start_idx] %>% round(2)
+          mzml_rt_start <- FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$rtime[peak_start_idx] %>% round(2)
           
           #3. find rt of peak end time
-          mzml_rt_end <- FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$time[peak_end_idx] %>% round(2)
+          mzml_rt_end <- FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$rtime[peak_end_idx] %>% round(2)
           
           
           #find target lipid name and family from mrm_guide
@@ -120,8 +120,8 @@ mzR_mrm_findR <- function(FUNC_mzR, #list from master_list containing $mzR objec
               FUNC_mrm_guide$precursor_mz < (precursor_mz + 0.25) &
               FUNC_mrm_guide$product_mz > (product_mz - 0.25) &
               FUNC_mrm_guide$product_mz < (product_mz + 0.25) &
-              FUNC_mrm_guide$explicit_retention_time > (min(FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$time)-0.1)&
-              FUNC_mrm_guide$explicit_retention_time < (max(FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$time)+0.1)
+              FUNC_mrm_guide$explicit_retention_time > (min(FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$rtime)-0.1)&
+              FUNC_mrm_guide$explicit_retention_time < (max(FUNC_mzR[[idx_plate]][[idx_mzML]]$mzR_chromatogram[[idx_mrm]]$rtime)+0.1)
           )
           }
           
